@@ -34,7 +34,6 @@ public final class CurlCommandsUtil {
         // update this to include get from state and temp
         
         if (param != null && !param.equals("")) {
-            // Console console = connection.getConsole(param);
             Temperature temp = connection.getTemp(param);
             if (temp == null) {
                 return failedAttempt("temp value was null");

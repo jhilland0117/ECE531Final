@@ -39,7 +39,7 @@ public class JDBCConnection {
     // get list of objects to fill a table
     public List<Temperature> getAllTemps() {
         List<Temperature> temps = new ArrayList<>();
-        String select = "select * from console";
+        String select = "select * from temps";
 
         try ( Connection conn = setupConnection()) {
 
@@ -92,7 +92,7 @@ public class JDBCConnection {
 
     }
 
-    // add a console to the database
+    // add a temp to the database
     public String addTemp(Temperature temp) {
         String insert = "insert into temps (temp, time) values ('"
                 + temp.getTemp()
@@ -110,7 +110,7 @@ public class JDBCConnection {
         return "Post temp Successful\n";
     }
 
-    // delete console from database
+    // delete temp from database
     public String deleteTemp(String id) {
         String insert = "delete from temps where id = " + id;
         try ( Connection conn = setupConnection()) {
