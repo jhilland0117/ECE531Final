@@ -80,6 +80,8 @@ public final class CurlCommandsUtil {
         String[] typeSeparation = input.split(TYPE_DELIM);
         String type = typeSeparation[0];
         String params = typeSeparation[1];
+        
+        System.out.println("TYPE: " + type + ", params: " + params + "\n");
 
         if (type == STATE) {
             State state = new State();
