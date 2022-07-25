@@ -1,6 +1,8 @@
 package com.hilland;
 
+import com.hilland.domain.State;
 import com.hilland.domain.Temperature;
+import com.hilland.domain.Thermostat;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,17 +59,55 @@ public class JDBCConnection {
         return temps;
     }
 
-    // add a console to the database
-    public String addTemp(String temp) {
-        String insert = "insert into temps (temp) values ('" + Integer.parseInt(temp) + "')";
+    public String handleType(Thermostat thermostat) {
+        if (thermostat instanceof Temperature) {
+            return addTemp((Temperature) thermostat);
+        } else if (thermostat instanceof State) {
+            return addState((State) thermostat);
+        }
+        return "data type is not supported";
+    }
+
+    public String addState(State state) {
+        String insert = null;
+        if (state.isOn()) {
+            insert = "insert into state (state, time) values ('', '"
+                    + state.getTime()
+                    + "')";
+        } else {
+            insert = "insert into state (state, time) values (NULL, '"
+                    + state.getTime()
+                    + "')";
+        }
+
         try ( Connection conn = setupConnection()) {
             Statement statement = (Statement) conn.createStatement();
             statement.execute(insert);
         } catch (SQLException ex) {
             System.err.format("SQL State: %s\n%s", ex.getSQLState(), ex.getMessage());
-            return "Post Failed\n";
+            return "Post state Failed\n";
         }
-        return "Post Successful\n";
+
+        return "Post state Successful\n";
+
+    }
+
+    // add a console to the database
+    public String addTemp(Temperature temp) {
+        String insert = "insert into temps (temp, time) values ('"
+                + temp.getTemp()
+                + "', '"
+                + temp.getTime()
+                + "')";
+
+        try ( Connection conn = setupConnection()) {
+            Statement statement = (Statement) conn.createStatement();
+            statement.execute(insert);
+        } catch (SQLException ex) {
+            System.err.format("SQL State: %s\n%s", ex.getSQLState(), ex.getMessage());
+            return "Post temp Failed\n";
+        }
+        return "Post temp Successful\n";
     }
 
     // delete console from database

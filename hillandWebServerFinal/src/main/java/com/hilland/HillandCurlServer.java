@@ -40,6 +40,6 @@ public class HillandCurlServer extends NanoHTTPD {
             return CurlCommandsUtil.performDelete(connection, session);
         }
 
-        return CurlCommandsUtil.failedAttempt();
+        return CurlCommandsUtil.failedAttempt("unacceptable request type");
     }
 }
