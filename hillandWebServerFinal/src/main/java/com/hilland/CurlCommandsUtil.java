@@ -83,10 +83,10 @@ public final class CurlCommandsUtil {
         
         System.out.println("TYPE: " + type + ", params: " + params + "\n");
 
-        if (type == STATE) {
+        if (type.equals(STATE)) {
             State state = new State();
             return new State(Boolean.parseBoolean(params));
-        } else if (type == TEMP) {
+        } else if (type.equals(TEMP)) {
             String[] values = params.split(DELIM);
             int time = Integer.parseInt(values[0]);
             int temp = Integer.parseInt(values[1]);
