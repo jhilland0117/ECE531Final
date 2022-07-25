@@ -88,6 +88,7 @@ public final class CurlCommandsUtil {
             String[] values = params.split(DELIM);
             int time = Integer.parseInt(values[0]);
             int temp = Integer.parseInt(values[1]);
+            System.out.println("VALUES" + time + " " + temp + "\n");
             if (time > 24 || time < 0 || temp < 0) {
                 return null;
             }
