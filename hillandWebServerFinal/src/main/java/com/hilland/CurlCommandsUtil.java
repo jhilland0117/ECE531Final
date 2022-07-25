@@ -30,7 +30,9 @@ public final class CurlCommandsUtil {
         String jsonResp = null;
         String param = getIndex(session.getUri());
         Gson gson = new Gson();
-
+        
+        // update this to include get from state and temp
+        
         if (param != null && !param.equals("")) {
             // Console console = connection.getConsole(param);
             Temperature temp = connection.getTemp(param);
