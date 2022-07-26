@@ -85,7 +85,7 @@ public final class JDBCConnection {
 
     public static final List<Report> getAllReports() {
         List<Report> reports = new ArrayList<>();
-        String select = "select * from temps";
+        String select = "select * from reports";
 
         try ( Connection conn = setupConnection()) {
 

@@ -9,7 +9,6 @@ import fi.iki.elonen.NanoHTTPD;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
-import java.sql.Timestamp;
 
 import static fi.iki.elonen.NanoHTTPD.MIME_PLAINTEXT;
 import static fi.iki.elonen.NanoHTTPD.newFixedLengthResponse;
@@ -110,10 +109,7 @@ public final class CurlCommandsUtil {
 
         System.out.println("TYPE: " + route + ", params: " + input + "\n");
 
-        if (route.equals(STATE)) {
-            State state = new State();
-            state.setOn(Boolean.parseBoolean(input));
-        } else if (route.equals(TEMP)) {
+        if (route.equals(TEMP)) {
             String[] values = input.split(DELIM);
             int time = Integer.parseInt(values[0]);
             int temp = Integer.parseInt(values[1]);
