@@ -11,14 +11,17 @@ import java.util.List;
  *
  * @author jhilland
  */
-public class JDBCConnection {
+public final class JDBCConnection {
 
     private static final String DB_CONNECTION = "jdbc:mysql://127.0.0.1:3306/thermostat";
     private static final String ROOT = "root";
     private static final String PASSWORD = "Brady#2019";
 
+    private JDBCConnection() {
+    }
+
     // get request based on ID
-    public Temperature getTemp(String id) {
+    public static final Temperature getTemp(String id) {
 
         String select = "select * from temps where id = " + id;
         try ( Connection conn = setupConnection()) {
@@ -36,8 +39,7 @@ public class JDBCConnection {
         return null;
     }
 
-    // get list of objects to fill a table
-    public List<Temperature> getAllTemps() {
+    public static final List<Temperature> getAllTemps() {
         List<Temperature> temps = new ArrayList<>();
         String select = "select * from temps";
 
@@ -59,7 +61,7 @@ public class JDBCConnection {
         return temps;
     }
 
-    public String handleType(Thermostat thermostat) {
+    public static final String handleType(Thermostat thermostat) {
         if (thermostat instanceof Temperature) {
             return addTemp((Temperature) thermostat);
         } else if (thermostat instanceof State) {
@@ -68,7 +70,7 @@ public class JDBCConnection {
         return "data type is not supported";
     }
 
-    public String addState(State state) {
+    public static final String addState(State state) {
         String insert = null;
         if (state.isOn()) {
             insert = "insert into state (state, time) values ('', '"
@@ -93,7 +95,16 @@ public class JDBCConnection {
     }
 
     // add a temp to the database
-    public String addTemp(Temperature temp) {
+    public static final String addTemp(Temperature temp) {
+        
+        // check to see if this time already exists, so we dont contradict ourselves
+        for (Temperature dbTemp : getAllTemps()) {
+            if (dbTemp.getTime() == temp.getTime()) {
+                // we should do an update, but this is easier for now
+                deleteTemp(Long.toString(dbTemp.getId()));
+            }
+        }
+        
         String insert = "insert into temps (temp, time) values ('"
                 + temp.getTemp()
                 + "', '"
@@ -111,7 +122,7 @@ public class JDBCConnection {
     }
 
     // delete temp from database
-    public String deleteTemp(String id) {
+    public static final String deleteTemp(String id) {
         String insert = "delete from temps where id = " + id;
         try ( Connection conn = setupConnection()) {
             Statement statement = (Statement) conn.createStatement();
@@ -123,7 +134,7 @@ public class JDBCConnection {
         return "Delete Successful\n";
     }
 
-    private Connection setupConnection() throws SQLException {
+    private static final Connection setupConnection() throws SQLException {
         return DriverManager.getConnection(DB_CONNECTION, ROOT, PASSWORD);
     }
 

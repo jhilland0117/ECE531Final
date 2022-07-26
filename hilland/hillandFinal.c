@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <syslog.h>
+#include <argp.h>
 
 #define NO_ARG          0
 #define OK              0
@@ -23,13 +24,36 @@
 #define NO_FILE         12
 #define DAEMON_NAME     "HillandFinalDaemon"
 
+// params, move to config file
 static const char* URL = "http://52.8.135.131:8080/";
 static const char* TEMP_FILENAME = "/tmp/temp";
 static const char* STATE_FILENAME = "/tmp/status";
 
-/*
- * Hilland, Joseph ECE 531 Final Assignment
- */
+// set params for argp
+const char *argp_program_version = "1.0.0.dev1";
+const char *argp_program_bug_address = "jhilland@unm.edu";
+static char args_doc[] = "-u http://localhost:8000 -o 'argument to pass'";
+static char doc[] = "Provide a url and conduct a get, post, delete or put request.";
+
+// arguments will be used for storing values from command line
+struct Arguments {
+    char *arg;  // for string argument
+    char *url;    
+    bool post;
+    bool get;
+    bool put;
+    bool delete;
+};
+
+// argp options required for output to user
+static struct argp_option options[] = {
+    {"url", 'u', "String", NO_ARG, "URL for HTTP Request, REQUIRED"},
+    {"post", 'o', NO_ARG, NO_ARG, "POST HTTP Request, requires VERB"},
+    {"get", 'g', NO_ARG, NO_ARG, "GET HTTP Request"},
+    {"put", 'p', NO_ARG, NO_ARG, "GET HTTP Request, requires VERB"},
+    {"delete", 'd', NO_ARG, NO_ARG, "GET HTTP Request, requires VERB"},
+    {NO_ARG}
+};
 
 static void _signal_handler(const int signal) {
     switch (signal) {
@@ -45,13 +69,44 @@ static void _signal_handler(const int signal) {
     }
 }
 
-static int send_http_request(char *message, char *type, bool verb) {
-    printf("sending %s request at url: %s\n", type, URL);
+/*----------------------------------*/
+ struct memory {
+   char *response;
+   size_t size;
+ };
+ 
+ static size_t cb(void *data, size_t size, size_t nmemb, void *userp)
+ {
+   size_t realsize = size * nmemb;
+   struct memory *mem = (struct memory *)userp;
+ 
+   char *ptr = realloc(mem->response, mem->size + realsize + 1);
+   if(ptr == NULL)
+     return 0;  /* out of memory! */
+ 
+   mem->response = ptr;
+   memcpy(&(mem->response[mem->size]), data, realsize);
+   mem->size += realsize;
+   mem->response[mem->size] = 0;
+ 
+   return realsize;
+ }
+
+ struct memory chunk = {0};
+
+/*----------------------------------*/
+
+static int send_http_request(char *url, char *message, char *type, bool verb) {
+    printf("sending %s request at url: %s\n", type, url);
     CURL *curl = curl_easy_init();
     if (curl) {
         CURLcode res;
-        curl_easy_setopt(curl, CURLOPT_URL, URL);
+        curl_easy_setopt(curl, CURLOPT_URL, url);
         curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, type);
+        // ---------------------------------
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, cb);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
+        // ---------------------------------
         if (verb) {
             printf("sending message: %s\n", message);
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, message);
@@ -64,11 +119,17 @@ static int send_http_request(char *message, char *type, bool verb) {
             return REQ_ERR;
         }
 
+        printf("%s\n", chunk.response);
+
         curl_easy_cleanup(curl);
     } else {
         return INIT_ERR;
     }
     return OK;
+}
+
+static int send_http_daemon(char *message, char *type, bool verb) {
+    return send_http_request(URL, message, type, verb);
 }
 
 static int daemonize() {
@@ -114,28 +175,133 @@ static bool file_exists(const char* filename) {
     return (stat(filename, &buffer) == 0) ? true : false;
 }
 
-static int read_values() {
-    syslog(LOG_INFO, "Reading temp/status values.");
-    // check that SIM has created files for use
-    if (!file_exists(TEMP_FILENAME) || !file_exists(STATE_FILENAME) ) {
-        syslog(LOG_ERR, "SIM file does not exist.");
-        return NO_FILE;
-    }
+int handle_requirement_error(char* message, struct argp_state *state) {
+    printf(message);
+    argp_usage(state);
+    return REQ_ERR;
+}
 
-    File *temp_file;
-    File *state_file;
-
-    while (true) {
-        syslog(LOG_INFO, "doing the work!");
-        sleep(1);
+// parse command line options IF not run as a daemon instance
+static error_t parse_opt(int key, char *arg, struct argp_state *state) {
+    struct Arguments *arguments = state->input;
+    switch (key) {
+        case 'u':
+            arguments->url = arg;
+            break;
+        case 'o':
+            arguments->post = true;
+            break; 
+        case 'g':
+            arguments->get = true;
+            break;
+        case 'p':
+            arguments->put = true;
+            break;
+        case 'd':
+            arguments->delete = true;
+            break;
+        case ARGP_KEY_NO_ARGS:
+            // check if args are required based on request type, notify user
+            if (arguments->post == true || arguments->put == true || arguments->delete == true) {
+                return handle_requirement_error("You need to supply a VERB.\n", state);
+            }
+        case ARGP_KEY_ARG:
+            // if too many arguments are given, notify user
+            if (state->arg_num >= 1) {
+                printf("Too many arguments, use quotes around your extra argument.\n");
+                argp_usage(state);
+                return REQ_ERR;
+            }
+            arguments->arg = arg;
+            break;
+        case ARGP_KEY_END:
+            // if url is null or malformed, notify user
+            if (arguments->url == NULL) {
+                printf("Please provide a valid url.\n");
+                argp_usage(state);
+                return REQ_ERR;
+            } else if (arguments->get == false && arguments->post == false && arguments->put == false && arguments->delete == false) {
+                return handle_requirement_error("You must select http request type.\n", state);
+            }
+            break;
+        case ARGP_KEY_SUCCESS:
+            // perform request based on type, should this be limited to only one type allowed...
+            if (arguments->get) {
+                int err = send_http_request(arguments->url, NULL, "GET", false);
+                break;
+            } else if (arguments->post) {
+                int err = send_http_request(arguments->url, arguments->arg, "POST", true);
+                break;
+            } else if (arguments->put) {
+                int err = send_http_request(arguments->url, arguments->arg, "PUT", true);
+                break;
+            } else if (arguments->delete) {
+                int err = send_http_request(arguments->url, arguments->arg, "DELETE", true);
+                break;
+            }
+            break;
+        default:
+            return ARGP_ERR_UNKNOWN;
     }
     return OK;
 }
 
+static compare_temp() {
+    int i = 0;
+    FILE* tempFile = NULL;
+    tempFile = fopen(TEMP_FILENAME, "r");
+    fscanf(tempFile, "%d", &i); 
+    printf("value of temp is %d\n", i);
+    fclose(tempFile);
+}
+
+static int read_values() {
+    syslog(LOG_INFO, "Reading temp/status values.");
+    // check that SIM has created files for use
+    if (!file_exists(TEMP_FILENAME) || !file_exists(STATE_FILENAME) ) {
+        syslog(LOG_ERR, "Simulation file does not exist.");
+        return NO_FILE;
+    }
+
+    while (true) {
+        compare_temp();
+        sleep(1);
+    }
+    
+    return ERR_WTF;
+}
+
+static struct argp argp = {options, parse_opt, args_doc, doc};
+
 int main(int argc, char **argv) {
 
-    daemonize();
-    read_values();
+    int err;
 
-    return OK;
+    if (argc > 1) {
+        // default arguments, which could be done in struct
+        syslog(LOG_INFO, "Using command line rather than daemon script.");
+        struct Arguments arguments;
+        arguments.url = NULL;
+        arguments.arg = NULL;
+        arguments.post = false;
+        arguments.get = false;
+        arguments.put = false;
+        arguments.delete = false;
+
+        // parse the arguments
+        argp_parse(&argp, argc, argv, 0, 0, &arguments);
+    } else {
+        syslog(LOG_INFO, "Using daemon script rather than command line.");
+    }
+
+    err = daemonize();
+    if (err != OK) {
+        return ERR_WTF;
+    }
+    err = read_values();
+    if (err != OK) {
+        return ERR_WTF;
+    }
+
+    return ERR_WTF;
 }

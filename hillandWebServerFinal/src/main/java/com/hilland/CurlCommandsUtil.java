@@ -26,21 +26,19 @@ public final class CurlCommandsUtil {
     private CurlCommandsUtil() {
     }
 
-    public static NanoHTTPD.Response performGet(JDBCConnection connection, NanoHTTPD.IHTTPSession session) {
+    public static NanoHTTPD.Response performGet(NanoHTTPD.IHTTPSession session) {
         String jsonResp = null;
         String param = getIndex(session.getUri());
         Gson gson = new Gson();
-        
-        // update this to include get from state and temp
-        
+                
         if (param != null && !param.equals("")) {
-            Temperature temp = connection.getTemp(param);
+            Temperature temp = JDBCConnection.getTemp(param);
             if (temp == null) {
                 return failedAttempt("temp value was null");
             }
             jsonResp = gson.toJson(temp);
         } else {
-            List<Temperature> temps = connection.getAllTemps();
+            List<Temperature> temps = JDBCConnection.getAllTemps();
             if (temps.isEmpty()) {
                 return failedAttempt("get request has empty results");
             }
@@ -50,7 +48,7 @@ public final class CurlCommandsUtil {
         return newFixedLengthResponse(jsonResp);
     }
 
-    public static NanoHTTPD.Response performPost(JDBCConnection connection, NanoHTTPD.IHTTPSession session) {
+    public static NanoHTTPD.Response performPost(NanoHTTPD.IHTTPSession session) {
         try {
             session.parseBody(new HashMap<>());
             Thermostat thermostat = parseTempParams(session.getQueryParameterString());
@@ -58,15 +56,15 @@ public final class CurlCommandsUtil {
             if (thermostat == null) {
                 return newFixedLengthResponse("temp or time values unsupported");
             }
-            String result = connection.handleType(thermostat);
+            String result = JDBCConnection.handleType(thermostat);
             return newFixedLengthResponse(result);
         } catch (IOException | NanoHTTPD.ResponseException e) {
             return failedAttempt("unable to commit post");
         }
     }
 
-    public static NanoHTTPD.Response performDelete(JDBCConnection connection, NanoHTTPD.IHTTPSession session) {
-        String result = connection.deleteTemp(getIndex(session.getUri()));
+    public static NanoHTTPD.Response performDelete(NanoHTTPD.IHTTPSession session) {
+        String result = JDBCConnection.deleteTemp(getIndex(session.getUri()));
         return newFixedLengthResponse(result);
     }
 
@@ -90,7 +88,6 @@ public final class CurlCommandsUtil {
             String[] values = params.split(DELIM);
             int time = Integer.parseInt(values[0]);
             int temp = Integer.parseInt(values[1]);
-            System.out.println("VALUES" + time + " " + temp + "\n");
             if (time > 24 || time < 0 || temp < 0) {
                 return null;
             }

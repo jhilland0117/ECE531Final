@@ -23,6 +23,10 @@ public class Temperature implements Thermostat {
         this.temp = temp;
     }
 
+    public Long getId() {
+        return id;
+    }
+
     public int getTemp() {
         return temp;
     }

@@ -12,8 +12,6 @@ import java.io.IOException;
  */
 public class HillandCurlServer extends NanoHTTPD {
 
-    private final JDBCConnection connection = new JDBCConnection();
-
     public HillandCurlServer() throws IOException {
         super(8080);
         start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
@@ -31,13 +29,13 @@ public class HillandCurlServer extends NanoHTTPD {
     @Override
     public Response serve(IHTTPSession session) {
         if (session.getMethod() == Method.GET) {
-            return CurlCommandsUtil.performGet(connection, session);
+            return CurlCommandsUtil.performGet(session);
         } else if (session.getMethod() == Method.POST) {
-            return CurlCommandsUtil.performPost(connection, session);
+            return CurlCommandsUtil.performPost(session);
         } else if (session.getMethod() == Method.PUT) {
-            return CurlCommandsUtil.performPost(connection, session);
+            return CurlCommandsUtil.performPost(session);
         } else if (session.getMethod() == Method.DELETE) {
-            return CurlCommandsUtil.performDelete(connection, session);
+            return CurlCommandsUtil.performDelete(session);
         }
 
         return CurlCommandsUtil.failedAttempt("unacceptable request type");
