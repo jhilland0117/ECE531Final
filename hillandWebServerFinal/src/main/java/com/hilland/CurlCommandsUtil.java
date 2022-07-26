@@ -65,10 +65,10 @@ public final class CurlCommandsUtil {
     public static NanoHTTPD.Response performPost(NanoHTTPD.IHTTPSession session) {
         try {
             session.parseBody(new HashMap<>());
-            
+            String route = session.getUri().replace("/", "");
             Thermostat thermostat = parseTempParams(
                     session.getQueryParameterString(), 
-                    session.getUri());
+                    route);
 
             if (thermostat == null) {
                 return newFixedLengthResponse("temp or time values unsupported");

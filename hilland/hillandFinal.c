@@ -28,7 +28,8 @@
 
 // params, move to config file
 static const char* STATE_URL = "http://52.8.135.131:8080/state";
-static const char* TEMP_URL = "http://52.8.135.131:8080/state";
+static const char* TEMP_URL = "http://52.8.135.131:8080/temp";
+static const char* REPORT_URL = "http://52.8.135.131:8080/report";
 static const char* TEMP_FILENAME = "/tmp/temp";
 static const char* STATE_FILENAME = "/tmp/status";
 
@@ -261,7 +262,7 @@ static void read_temp(void) {
     buffer[size] = '\0';
     printf("%s\n", buffer);
     
-    send_http_request(TEMP_URL, buffer, "POST", true);
+    send_http_request(REPORT_URL, buffer, "POST", true);
 }
 
 static int read_values(void) {
