@@ -1,6 +1,7 @@
 package com.hilland;
 
 import com.google.gson.Gson;
+import com.hilland.domain.Report;
 import com.hilland.domain.State;
 import com.hilland.domain.Temperature;
 import com.hilland.domain.Thermostat;
@@ -66,8 +67,8 @@ public final class CurlCommandsUtil {
         try {
             session.parseBody(new HashMap<>());
             String route = session.getUri().replace("/", "");
-            Thermostat thermostat = parseTempParams(
-                    session.getQueryParameterString(), 
+            Thermostat thermostat = parseRouteParams(
+                    session.getQueryParameterString(),
                     route);
 
             if (thermostat == null) {
@@ -81,8 +82,16 @@ public final class CurlCommandsUtil {
     }
 
     public static NanoHTTPD.Response performDelete(NanoHTTPD.IHTTPSession session) {
-        String result = JDBCConnection.deleteTemp(getIndex(session.getUri()));
-        return newFixedLengthResponse(result);
+        String route = session.getUri().replace("/", "");
+        if (route == TEMP)  {
+            String result = JDBCConnection.deleteTemp(getIndex(session.getUri()));
+            return newFixedLengthResponse(result);
+        } else if (route == REPORT) {
+            String result = JDBCConnection.deleteTemp(getIndex(session.getUri()));
+            return newFixedLengthResponse(result);
+        }
+        
+        return failedAttempt("failed to delete object, make sure correct route");
     }
 
     public static NanoHTTPD.Response failedAttempt(String message) {
@@ -91,7 +100,7 @@ public final class CurlCommandsUtil {
     }
 
     // expected input is state:true|false or temp:time,temp
-    private static Thermostat parseTempParams(String input, String route) {
+    private static Thermostat parseRouteParams(String input, String route) {
 
         System.out.println("TYPE: " + route + ", params: " + input + "\n");
 
@@ -108,7 +117,7 @@ public final class CurlCommandsUtil {
             return new Temperature(temp, time);
         } else if (route.equals(REPORT)) {
             int temp = Integer.parseInt(input);
-            return new Temperature(temp);
+            return Report.buildReport(temp);
         }
         return null;
     }

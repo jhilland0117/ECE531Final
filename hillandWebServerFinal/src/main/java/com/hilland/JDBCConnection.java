@@ -1,5 +1,6 @@
 package com.hilland;
 
+import com.hilland.domain.Report;
 import com.hilland.domain.State;
 import com.hilland.domain.Temperature;
 import com.hilland.domain.Thermostat;
@@ -38,7 +39,7 @@ public final class JDBCConnection {
         }
         return null;
     }
-    
+
     public static final State getState() {
         String select = "select * from state";
         try ( Connection conn = setupConnection()) {
@@ -82,13 +83,34 @@ public final class JDBCConnection {
         return temps;
     }
 
+    // TODO: visitor pattern!
     public static final String handleType(Thermostat thermostat) {
         if (thermostat instanceof Temperature) {
             return addTemp((Temperature) thermostat);
         } else if (thermostat instanceof State) {
             return addState((State) thermostat);
+        } else if (thermostat instanceof Report) {
+            return addReport((Report) thermostat);
         }
         return "data type is not supported";
+    }
+
+    public static final String addReport(Report report) {
+        String insert = "insert into report (temp, date) values ('"
+                + report.getTemp()
+                + "', '"
+                + report.getDate()
+                + "')";
+
+        try ( Connection conn = setupConnection()) {
+            Statement statement = (Statement) conn.createStatement();
+            statement.execute(insert);
+        } catch (SQLException ex) {
+            System.err.format("SQL State: %s\n%s", ex.getSQLState(), ex.getMessage());
+            return "Post state Failed\n";
+        }
+        
+        return "Post Report successful";
     }
 
     public static final String addState(State state) {
@@ -117,15 +139,15 @@ public final class JDBCConnection {
 
     // add a temp to the database
     public static final String addTemp(Temperature temp) {
-        
+
         // check to see if this time already exists, so we dont contradict ourselves
         for (Temperature dbTemp : getAllTemps()) {
-            if (dbTemp.getDate()== temp.getDate()) {
+            if (dbTemp.getDate() == temp.getDate()) {
                 // we should do an update, but this is easier for now
                 deleteTemp(Long.toString(dbTemp.getId()));
             }
         }
-        
+
         String insert = "insert into temps (temp, date) values ('"
                 + temp.getTemp()
                 + "', '"
