@@ -9,21 +9,21 @@ import java.sql.Timestamp;
 public class State implements Thermostat {
 
     // true is on, false is off
-    private boolean on = true;
     private Timestamp date;
+    private String state;
 
-    public static State buildState(boolean value) {
+    public static State buildState(String value) {
         State state = new State();
-        state.setOn(value);
+        state.setState(value);
         return state;
     }
-    
-    public boolean isOn() {
-        return on;
+
+    public String getState() {
+        return state;
     }
 
-    public void setOn(boolean on) {
-        this.on = on;
+    public void setState(String state) {
+        this.state = state;
     }
 
     public Timestamp getDate() {

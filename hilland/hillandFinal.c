@@ -265,6 +265,38 @@ static void read_temp(void) {
     send_http_request(REPORT_URL, buffer, "POST", true);
 }
 
+static void handle_json(void) {
+    // get commands from web server
+    char* json = "http://52.8.135.131:8080/state"
+
+    jsmn_parser p;
+    jsmntok_t tokens[128]; 
+    jsmn_init(&p);
+    int r = jsmn_parse(&p, json, strlen(json), tokens, sizeof(tokens) / sizeof(tokens[0]));
+
+    if (r < 0) {
+        printf("Failed to parse JSON: %d\n", r);
+        return ERR_WTF;
+    }
+
+    for (int i = 0; i < r; i++) {
+        
+        jsmntok_t *t = &tokens[i];
+        // assume root is array
+        if (t->type != JSMN_ARRAY) {
+            if (t->type == JSMN_STRING) {
+                printf("  * %.*s\n", t->end - t->start, json + t->start);
+            } else if (t->type == JSMN_OBJECT) {
+                // noop
+            } else if (t->type == JSMN_PRIMITIVE) {
+                char *state = json_token_tostr(json, t);
+                printf("  * %s\n", state);
+            }
+        }
+
+    }
+}
+
 static int read_values(void) {
 
     syslog(LOG_INFO, "Reading temp/status values.");
@@ -278,42 +310,7 @@ static int read_values(void) {
 
         // read temp and send post to webserver for thermostat
         read_temp();
-
-        // get commands from web server
-        char* json = send_http_request(STATE_URL, NULL, "GET", false);
-
-        jsmn_parser p;
-        jsmntok_t tokens[128]; 
-        jsmn_init(&p);
-        int r = jsmn_parse(&p, json, strlen(json), tokens,
-                 sizeof(tokens) / sizeof(tokens[0]));
-
-        if (r < 0) {
-            printf("Failed to parse JSON: %d\n", r);
-            return 1;
-        }
-
-        printf("going through %d iterations\n", r);
-
-        for (int i = 0; i < r; i++) {
-            
-            jsmntok_t *t = &tokens[i];
-            // assume root is array
-            if (t->type != JSMN_ARRAY) {
-                if (t->type == JSMN_STRING) {
-                    printf("  * %.*s\n", t->end - t->start, json + t->start);
-                } else if (t->type == JSMN_OBJECT) {
-                    // noop
-                } else if (t->type == JSMN_PRIMITIVE) {
-                    char *state = json_token_tostr(json, t);
-                    printf("  * %s\n", state);
-
-                    // write state to file!!
-                }
-            }
-
-        }
-        
+        handle_json();        
         sleep(3);
     }
     
