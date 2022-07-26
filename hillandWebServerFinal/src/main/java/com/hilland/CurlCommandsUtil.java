@@ -137,6 +137,8 @@ public final class CurlCommandsUtil {
             return TEMP;
         } else if (param.contains(STATE)) {
             return STATE;
+        } else if (param.contains(REPORT)) {
+            return REPORT;
         }
         return null;
     }
