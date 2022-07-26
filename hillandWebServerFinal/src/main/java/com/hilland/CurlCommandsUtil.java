@@ -55,7 +55,7 @@ public final class CurlCommandsUtil {
             } else if (route.equals(STATE)) {
                 State state = JDBCConnection.getState();
                 if (state == null) {
-                    jsonResp = gson.toJson(State.buildState("on"));
+                    jsonResp = gson.toJson(State.buildState(1));
                 }
                 jsonResp = gson.toJson(state);
             } else if (route.equals(REPORT)) {

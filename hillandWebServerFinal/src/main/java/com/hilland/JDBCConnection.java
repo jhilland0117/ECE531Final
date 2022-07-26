@@ -49,9 +49,9 @@ public final class JDBCConnection {
             while (resultSet.next()) {
                 String currentState = resultSet.getString("STATE");
                 if (currentState != null) {
-                    state.setOn("on");
+                    state.setOn(1);
                 } else {
-                    state.setOn("off");
+                    state.setOn(0);
                 }
             }
             return state;
@@ -146,11 +146,11 @@ public final class JDBCConnection {
 
     public static final String addState(State state) {
         String insert = null;
-        if (state.getOn().equals("on")) {
+        if (state.getOn() == 1) {
             insert = "insert into state (state, date) values ('', '"
                     + state.getDate()
                     + "')";
-        } else if (state.getOn().equals("off")) {
+        } else if (state.getOn() == 0) {
             insert = "insert into state (state, date) values (NULL, '"
                     + state.getDate()
                     + "')";
