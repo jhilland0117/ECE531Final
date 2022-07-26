@@ -64,9 +64,11 @@ public final class CurlCommandsUtil {
 
     public static NanoHTTPD.Response performPost(NanoHTTPD.IHTTPSession session) {
         try {
-            System.out.println("URI: " + session.getUri());
             session.parseBody(new HashMap<>());
-            Thermostat thermostat = parseTempParams(session.getQueryParameterString());
+            
+            Thermostat thermostat = parseTempParams(
+                    session.getQueryParameterString(), 
+                    session.getUri());
 
             if (thermostat == null) {
                 return newFixedLengthResponse("temp or time values unsupported");
@@ -89,28 +91,24 @@ public final class CurlCommandsUtil {
     }
 
     // expected input is state:true|false or temp:time,temp
-    private static Thermostat parseTempParams(String input) {
-        if (input.contains(TYPE_DELIM)) {
-            String[] typeSeparation = input.split(TYPE_DELIM);
-            String type = typeSeparation[0];
-            String params = typeSeparation[1];
+    private static Thermostat parseTempParams(String input, String route) {
 
-            System.out.println("TYPE: " + type + ", params: " + params + "\n");
+        System.out.println("TYPE: " + route + ", params: " + input + "\n");
 
-            if (type.equals(STATE)) {
-                State state = new State();
-                state.setOn(Boolean.parseBoolean(params));
-            } else if (type.equals(TEMP)) {
-                String[] values = params.split(DELIM);
-                int time = Integer.parseInt(values[0]);
-                int temp = Integer.parseInt(values[1]);
-                if (time > 24 || time < 0 || temp < 0) {
-                    return null;
-                }
-                return new Temperature(temp, time);
+        if (route.equals(STATE)) {
+            State state = new State();
+            state.setOn(Boolean.parseBoolean(input));
+        } else if (route.equals(TEMP)) {
+            String[] values = input.split(DELIM);
+            int time = Integer.parseInt(values[0]);
+            int temp = Integer.parseInt(values[1]);
+            if (time > 24 || time < 0 || temp < 0) {
+                return null;
             }
-        } else {
-            System.out.println("NODELIM: " + input);
+            return new Temperature(temp, time);
+        } else if (route.equals(REPORT)) {
+            int temp = Integer.parseInt(input);
+            return new Temperature(temp);
         }
         return null;
     }

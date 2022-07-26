@@ -25,6 +25,10 @@ public class Temperature implements Thermostat {
         this.temp = temp;
     }
 
+    public Temperature(int temp) {
+        this.temp = temp;
+    }
+
     public Long getId() {
         return id;
     }
