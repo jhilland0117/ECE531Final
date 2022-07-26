@@ -18,17 +18,14 @@ public class Temperature implements Thermostat {
     private Long id;
     private int temp;
     private Timestamp date;
+    private String timeOfDay;
 
     public Temperature() {
     }
 
-    public Temperature(int temp, int time) {
+    public Temperature(int temp, String time) {
         this.temp = temp;
-    }
-
-    public Temperature(int temp) {
-        this.temp = temp;
-        this.date = Timestamp.from(Instant.now());
+        this.timeOfDay = time;
     }
 
     public Long getId() {

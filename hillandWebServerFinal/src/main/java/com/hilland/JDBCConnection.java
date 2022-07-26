@@ -106,18 +106,6 @@ public final class JDBCConnection {
         return reports;
     }
 
-    // TODO: visitor pattern!
-    public static final String handleType(Thermostat thermostat) {
-        if (thermostat instanceof Temperature) {
-            return addTemp((Temperature) thermostat);
-        } else if (thermostat instanceof State) {
-            return addState((State) thermostat);
-        } else if (thermostat instanceof Report) {
-            return addReport((Report) thermostat);
-        }
-        return "data type is not supported";
-    }
-
     public static final String addReport(Report report) {
         String insert = "insert into report (temp, date) values ('"
                 + report.getTemp()
@@ -134,6 +122,26 @@ public final class JDBCConnection {
         }
 
         return "Post Report successful\n";
+    }
+
+    public static final String updateState(boolean value) {
+        String update = null;
+
+        if (value) {
+            update = "update state set state = ''";
+        } else {
+            update = "update state set state = NULL";
+        }
+        
+        try ( Connection conn = setupConnection()) {
+            Statement statement = (Statement) conn.createStatement();
+            statement.execute(update);
+        } catch (SQLException ex) {
+            System.err.format("SQL State: %s\n%s", ex.getSQLState(), ex.getMessage());
+            return "Update state Failed\n";
+        }
+        
+        return "Update state Failed\n";
     }
 
     public static final String addState(State state) {

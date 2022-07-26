@@ -12,6 +12,9 @@ import java.util.List;
 
 import static fi.iki.elonen.NanoHTTPD.MIME_PLAINTEXT;
 import static fi.iki.elonen.NanoHTTPD.newFixedLengthResponse;
+import static com.hilland.JDBCConnection.addReport;
+import static com.hilland.JDBCConnection.addState;
+import static com.hilland.JDBCConnection.addTemp;
 
 /**
  *
@@ -79,11 +82,31 @@ public final class CurlCommandsUtil {
             if (thermostat == null) {
                 return newFixedLengthResponse("temp or time values unsupported");
             }
-            String result = JDBCConnection.handleType(thermostat);
+
+            // TODO: so much cleaner if used visitor pattern
+            String result = null;
+            if (thermostat instanceof Temperature) {
+                result = addTemp((Temperature) thermostat);
+            } else if (thermostat instanceof State) {
+                result = addState((State) thermostat);
+            } else if (thermostat instanceof Report) {
+                handleTemperatureChange((Report) thermostat);
+                result = addReport((Report) thermostat);
+            }
+
             return newFixedLengthResponse(result);
         } catch (IOException | NanoHTTPD.ResponseException e) {
             return failedAttempt("unable to commit post");
         }
+    }
+
+    private static String handleTemperatureChange(Report temperature) {
+        if (temperature.getTemp() < 50) {
+            return JDBCConnection.updateState(true);
+        } else if (temperature.getTemp() > 100) {
+            return JDBCConnection.updateState(false);
+        }
+        return null;
     }
 
     public static NanoHTTPD.Response performDelete(NanoHTTPD.IHTTPSession session) {
@@ -104,18 +127,15 @@ public final class CurlCommandsUtil {
                 message);
     }
 
-    // expected input is state:true|false or temp:time,temp
+    // expected input for temp temp:time,temp
     private static Thermostat parseRouteParams(String input, String route) {
 
         System.out.println("TYPE: " + route + ", params: " + input + "\n");
 
         if (route.equals(TEMP)) {
             String[] values = input.split(DELIM);
-            int time = Integer.parseInt(values[0]);
+            String time = values[0];
             int temp = Integer.parseInt(values[1]);
-            if (time > 24 || time < 0 || temp < 0) {
-                return null;
-            }
             return new Temperature(temp, time);
         } else if (route.equals(REPORT)) {
             int temp = Integer.parseInt(input);
