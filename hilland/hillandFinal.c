@@ -267,7 +267,8 @@ static void read_temp(void) {
 
 static void handle_json(void) {
     // get commands from web server
-    char* json = "http://52.8.135.131:8080/state"
+    //char* json = "http://52.8.135.131:8080/state";
+    char *json = "{\"on\":true}";
 
     jsmn_parser p;
     jsmntok_t tokens[128]; 
@@ -288,9 +289,6 @@ static void handle_json(void) {
                 printf("  * %.*s\n", t->end - t->start, json + t->start);
             } else if (t->type == JSMN_OBJECT) {
                 // noop
-            } else if (t->type == JSMN_PRIMITIVE) {
-                char *state = json_token_tostr(json, t);
-                printf("  * %s\n", state);
             }
         }
 
