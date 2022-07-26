@@ -34,19 +34,28 @@ public final class CurlCommandsUtil {
         String param = getIndex(session.getUri());
         System.out.println("route: " + route + " param " + param + "\n");
         Gson gson = new Gson();
+
         if (route != null) {
-            if (param != null && !param.equals("")) {
-                Temperature temp = JDBCConnection.getTemp(param);
-                if (temp == null) {
-                    return failedAttempt("temp value was null");
+
+            if (route.equals(TEMP)) {
+                if (param != null && !param.equals("")) {
+                    Temperature temp = JDBCConnection.getTemp(param);
+                    if (temp == null) {
+                        return failedAttempt("temp value was null");
+                    }
+                    jsonResp = gson.toJson(temp);
+                } else {
+                    List<Temperature> temps = JDBCConnection.getAllTemps();
+                    if (temps.isEmpty()) {
+                        return failedAttempt("get request has empty results");
+                    }
+                    jsonResp = gson.toJson(temps);
                 }
-                jsonResp = gson.toJson(temp);
-            } else {
-                List<Temperature> temps = JDBCConnection.getAllTemps();
-                if (temps.isEmpty()) {
-                    return failedAttempt("get request has empty results");
+            } else if (route.equals(STATE)) {
+                State state = JDBCConnection.getState();
+                if (state == null) {
+                    jsonResp = gson.toJson(State.buildState(true));
                 }
-                jsonResp = gson.toJson(temps);
             }
 
             return newFixedLengthResponse(jsonResp);
@@ -58,7 +67,7 @@ public final class CurlCommandsUtil {
         try {
             session.parseBody(new HashMap<>());
             Thermostat thermostat = parseTempParams(session.getQueryParameterString());
-            
+
             if (thermostat == null) {
                 return newFixedLengthResponse("temp or time values unsupported");
             }
@@ -84,7 +93,7 @@ public final class CurlCommandsUtil {
         String[] typeSeparation = input.split(TYPE_DELIM);
         String type = typeSeparation[0];
         String params = typeSeparation[1];
-        
+
         System.out.println("TYPE: " + type + ", params: " + params + "\n");
 
         if (type.equals(STATE)) {
@@ -99,7 +108,7 @@ public final class CurlCommandsUtil {
             }
             return new Temperature(temp, time);
         } else if (type.equals(REPORT)) {
-            
+
         }
         return null;
     }
@@ -107,7 +116,7 @@ public final class CurlCommandsUtil {
     private static String getIndex(String param) {
         return param.replaceAll("[^0-9]", "");
     }
-    
+
     private static String getRoute(String param) {
         if (param.contains(TEMP)) {
             return TEMP;

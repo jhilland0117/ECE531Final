@@ -12,6 +12,12 @@ public class State implements Thermostat {
     private boolean on;
     private Timestamp date;
 
+    public static State buildState(boolean value) {
+        State state = new State();
+        state.setOn(value);
+        return state;
+    }
+    
     public boolean isOn() {
         return on;
     }

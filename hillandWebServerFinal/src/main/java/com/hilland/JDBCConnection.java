@@ -38,6 +38,27 @@ public final class JDBCConnection {
         }
         return null;
     }
+    
+    public static final State getState() {
+        String select = "select * from state";
+        try ( Connection conn = setupConnection()) {
+            Statement statement = conn.createStatement();
+            ResultSet resultSet = statement.executeQuery(select);
+            State state = new State();
+            while (resultSet.next()) {
+                String currentState = resultSet.getString("STATE");
+                if (currentState != null) {
+                    state.setOn(true);
+                } else {
+                    state.setOn(false);
+                }
+            }
+            return state;
+        } catch (SQLException ex) {
+            System.err.format("SQL State: %s\n%s", ex.getSQLState(), ex.getMessage());
+        }
+        return null;
+    }
 
     public static final List<Temperature> getAllTemps() {
         List<Temperature> temps = new ArrayList<>();
