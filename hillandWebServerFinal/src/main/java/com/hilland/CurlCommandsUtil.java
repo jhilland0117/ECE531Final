@@ -8,6 +8,7 @@ import fi.iki.elonen.NanoHTTPD;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.sql.Timestamp;
 
 import static fi.iki.elonen.NanoHTTPD.MIME_PLAINTEXT;
 import static fi.iki.elonen.NanoHTTPD.newFixedLengthResponse;
@@ -22,30 +23,35 @@ public final class CurlCommandsUtil {
     private static final String TYPE_DELIM = ":";
     private static final String STATE = "state";
     private static final String TEMP = "temp";
+    private static final String REPORT = "report";
 
     private CurlCommandsUtil() {
     }
 
     public static NanoHTTPD.Response performGet(NanoHTTPD.IHTTPSession session) {
         String jsonResp = null;
+        String route = getRoute(session.getUri());
         String param = getIndex(session.getUri());
+        System.out.println("route: " + route + " param " + param + "\n");
         Gson gson = new Gson();
-                
-        if (param != null && !param.equals("")) {
-            Temperature temp = JDBCConnection.getTemp(param);
-            if (temp == null) {
-                return failedAttempt("temp value was null");
+        if (route != null) {
+            if (param != null && !param.equals("")) {
+                Temperature temp = JDBCConnection.getTemp(param);
+                if (temp == null) {
+                    return failedAttempt("temp value was null");
+                }
+                jsonResp = gson.toJson(temp);
+            } else {
+                List<Temperature> temps = JDBCConnection.getAllTemps();
+                if (temps.isEmpty()) {
+                    return failedAttempt("get request has empty results");
+                }
+                jsonResp = gson.toJson(temps);
             }
-            jsonResp = gson.toJson(temp);
-        } else {
-            List<Temperature> temps = JDBCConnection.getAllTemps();
-            if (temps.isEmpty()) {
-                return failedAttempt("get request has empty results");
-            }
-            jsonResp = gson.toJson(temps);
-        }
 
-        return newFixedLengthResponse(jsonResp);
+            return newFixedLengthResponse(jsonResp);
+        }
+        return failedAttempt("improper get url path");
     }
 
     public static NanoHTTPD.Response performPost(NanoHTTPD.IHTTPSession session) {
@@ -83,7 +89,7 @@ public final class CurlCommandsUtil {
 
         if (type.equals(STATE)) {
             State state = new State();
-            return new State(Boolean.parseBoolean(params));
+            state.setOn(Boolean.parseBoolean(params));
         } else if (type.equals(TEMP)) {
             String[] values = params.split(DELIM);
             int time = Integer.parseInt(values[0]);
@@ -92,11 +98,22 @@ public final class CurlCommandsUtil {
                 return null;
             }
             return new Temperature(temp, time);
+        } else if (type.equals(REPORT)) {
+            
         }
         return null;
     }
 
     private static String getIndex(String param) {
         return param.replaceAll("[^0-9]", "");
+    }
+    
+    private static String getRoute(String param) {
+        if (param.contains(TEMP)) {
+            return TEMP;
+        } else if (param.contains(STATE)) {
+            return STATE;
+        }
+        return null;
     }
 }

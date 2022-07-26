@@ -10,6 +10,8 @@
 #include <sys/stat.h>
 #include <syslog.h>
 #include <argp.h>
+#include "../jsmn/jsmn.h"
+#include "json.c"
 
 #define NO_ARG          0
 #define OK              0
@@ -45,6 +47,14 @@ struct Arguments {
     bool delete;
 };
 
+ struct Curlmem {
+   char *response;
+   size_t size;
+ };
+ 
+ struct Curlmem chunk = {0};
+ char *KEYS[] = { "id", "temp", "time"};
+
 // argp options required for output to user
 static struct argp_option options[] = {
     {"url", 'u', "String", NO_ARG, "URL for HTTP Request, REQUIRED"},
@@ -69,44 +79,36 @@ static void _signal_handler(const int signal) {
     }
 }
 
-/*----------------------------------*/
- struct memory {
-   char *response;
-   size_t size;
- };
- 
- static size_t cb(void *data, size_t size, size_t nmemb, void *userp)
- {
-   size_t realsize = size * nmemb;
-   struct memory *mem = (struct memory *)userp;
- 
-   char *ptr = realloc(mem->response, mem->size + realsize + 1);
-   if(ptr == NULL)
-     return 0;  /* out of memory! */
- 
-   mem->response = ptr;
-   memcpy(&(mem->response[mem->size]), data, realsize);
-   mem->size += realsize;
-   mem->response[mem->size] = 0;
- 
-   return realsize;
- }
+static size_t call_back(void *data, size_t size, size_t nmemb, void *userp) {
+    size_t realsize = size * nmemb;
+    struct Curlmem *mem = (struct Curlmem *)userp;
 
- struct memory chunk = {0};
+    char *ptr = realloc(mem->response, mem->size + realsize + 1);
+    if(ptr == NULL) {
+        return 0;
+    }
 
-/*----------------------------------*/
+    mem->response = ptr;
+    memcpy(&(mem->response[mem->size]), data, realsize);
+    mem->size += realsize;
+    mem->response[mem->size] = 0;
 
-static int send_http_request(char *url, char *message, char *type, bool verb) {
+    return realsize;
+}
+
+static char* send_http_request(char *url, char *message, char *type, bool verb) {
     printf("sending %s request at url: %s\n", type, url);
     CURL *curl = curl_easy_init();
     if (curl) {
         CURLcode res;
         curl_easy_setopt(curl, CURLOPT_URL, url);
         curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, type);
-        // ---------------------------------
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, cb);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
-        // ---------------------------------
+        
+        if (type == "GET") {
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, call_back);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
+        }
+
         if (verb) {
             printf("sending message: %s\n", message);
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, message);
@@ -119,20 +121,23 @@ static int send_http_request(char *url, char *message, char *type, bool verb) {
             return REQ_ERR;
         }
 
-        printf("%s\n", chunk.response);
+        // debug
+        if (type == "GET") {
+            // printf("%s\n", chunk.response);
+        }
 
         curl_easy_cleanup(curl);
     } else {
-        return INIT_ERR;
+        return NULL;
     }
-    return OK;
+    return chunk.response;
 }
 
-static int send_http_daemon(char *message, char *type, bool verb) {
+static char* send_http_daemon(char *message, char *type, bool verb) {
     return send_http_request(URL, message, type, verb);
 }
 
-static int daemonize() {
+static int daemonize(void) {
     openlog(DAEMON_NAME, LOG_PID | LOG_NDELAY | LOG_NOWAIT, LOG_DAEMON);
 
     syslog(LOG_INFO, DAEMON_NAME);
@@ -176,7 +181,6 @@ static bool file_exists(const char* filename) {
 }
 
 int handle_requirement_error(char* message, struct argp_state *state) {
-    printf(message);
     argp_usage(state);
     return REQ_ERR;
 }
@@ -227,16 +231,16 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
         case ARGP_KEY_SUCCESS:
             // perform request based on type, should this be limited to only one type allowed...
             if (arguments->get) {
-                int err = send_http_request(arguments->url, NULL, "GET", false);
+                send_http_request(arguments->url, NULL, "GET", false);
                 break;
             } else if (arguments->post) {
-                int err = send_http_request(arguments->url, arguments->arg, "POST", true);
+                send_http_request(arguments->url, arguments->arg, "POST", true);
                 break;
             } else if (arguments->put) {
-                int err = send_http_request(arguments->url, arguments->arg, "PUT", true);
+                send_http_request(arguments->url, arguments->arg, "PUT", true);
                 break;
             } else if (arguments->delete) {
-                int err = send_http_request(arguments->url, arguments->arg, "DELETE", true);
+                send_http_request(arguments->url, arguments->arg, "DELETE", true);
                 break;
             }
             break;
@@ -246,16 +250,28 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     return OK;
 }
 
-static compare_temp() {
-    int i = 0;
+static void read_temp(void) {
+    int temp = 0;
+    FILE* tempFile = NULL;
+    tempFile = fopen(TEMP_FILENAME, "r");
+    fscanf(tempFile, "%d", &temp); 
+    // printf("TEMP READ: %d\n", i);
+    fclose(tempFile);
+    char *message = "report:" + temp;
+    send_http_daemon(NULL, "POST", false);
+    return i;
+}
+
+static void read_state(void) {
     FILE* tempFile = NULL;
     tempFile = fopen(TEMP_FILENAME, "r");
     fscanf(tempFile, "%d", &i); 
-    printf("value of temp is %d\n", i);
     fclose(tempFile);
+    return i;
 }
 
-static int read_values() {
+static int read_values(void) {
+
     syslog(LOG_INFO, "Reading temp/status values.");
     // check that SIM has created files for use
     if (!file_exists(TEMP_FILENAME) || !file_exists(STATE_FILENAME) ) {
@@ -263,10 +279,47 @@ static int read_values() {
         return NO_FILE;
     }
 
-    while (true) {
-        compare_temp();
+    //while (true) {
+
+        // read temp and send post to webserver for thermostat
+        read_temp();
+        read_state();
+
+        // get commands from web server
+        char* json = send_http_daemon(NULL, "GET", false);
+
+        jsmn_parser p;
+        jsmntok_t tokens[128]; 
+        jsmn_init(&p);
+        int r = jsmn_parse(&p, json, strlen(json), tokens,
+                 sizeof(tokens) / sizeof(tokens[0]));
+
+        if (r < 0) {
+            printf("Failed to parse JSON: %d\n", r);
+            return 1;
+        }
+
+        printf("going through %d iterations\n", r);
+
+        for (int i = 0; i < r; i++) {
+            
+            jsmntok_t *t = &tokens[i];
+            // assume root is array
+            if (t->type != JSMN_ARRAY) {
+                if (t->type == JSMN_STRING) {
+                    printf("  * %.*s\n", t->end - t->start, json + t->start);
+                } else if (t->type == JSMN_OBJECT) {
+                    // noop
+                } else if (t->type == JSMN_PRIMITIVE) {
+                    printf("  * %.*s\n", t->end - t->start, json + t->start);
+                }
+            }
+
+        }
+
+        
         sleep(1);
-    }
+    //}
     
     return ERR_WTF;
 }
@@ -292,11 +345,10 @@ int main(int argc, char **argv) {
         argp_parse(&argp, argc, argv, 0, 0, &arguments);
     } else {
         syslog(LOG_INFO, "Using daemon script rather than command line.");
-    }
-
-    err = daemonize();
-    if (err != OK) {
-        return ERR_WTF;
+        err = daemonize();
+        if (err != OK) {
+            return ERR_WTF;
+        }
     }
     err = read_values();
     if (err != OK) {

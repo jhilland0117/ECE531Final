@@ -1,5 +1,7 @@
 package com.hilland.domain;
 
+import java.sql.Timestamp;
+
 /**
  * create database thermostat;
  *
@@ -14,7 +16,7 @@ public class Temperature implements Thermostat {
 
     private Long id;
     private int temp;
-    private int time;
+    private Timestamp date;
 
     public Temperature() {
     }
@@ -39,12 +41,12 @@ public class Temperature implements Thermostat {
         this.temp = temp;
     }
 
-    public int getTime() {
-        return time;
+    public Timestamp getDate() {
+        return date;
     }
 
-    public void setTime(int time) {
-        this.time = time;
+    public void setDate(Timestamp date) {
+        this.date = date;
     }
 
 }

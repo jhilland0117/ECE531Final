@@ -99,16 +99,16 @@ public final class JDBCConnection {
         
         // check to see if this time already exists, so we dont contradict ourselves
         for (Temperature dbTemp : getAllTemps()) {
-            if (dbTemp.getTime() == temp.getTime()) {
+            if (dbTemp.getDate()== temp.getDate()) {
                 // we should do an update, but this is easier for now
                 deleteTemp(Long.toString(dbTemp.getId()));
             }
         }
         
-        String insert = "insert into temps (temp, time) values ('"
+        String insert = "insert into temps (temp, date) values ('"
                 + temp.getTemp()
                 + "', '"
-                + temp.getTime()
+                + temp.getDate()
                 + "')";
 
         try ( Connection conn = setupConnection()) {

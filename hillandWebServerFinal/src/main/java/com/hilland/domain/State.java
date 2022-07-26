@@ -1,6 +1,6 @@
 package com.hilland.domain;
 
-import java.time.Instant;
+import java.sql.Timestamp;
 
 /**
  *
@@ -10,15 +10,7 @@ public class State implements Thermostat {
 
     // true is on, false is off
     private boolean on;
-    private Instant time;
-
-    public State() {
-    }
-
-    public State(boolean on) {
-        this.on = on;
-        this.time = Instant.now();
-    }
+    private Timestamp date;
 
     public boolean isOn() {
         return on;
@@ -28,12 +20,12 @@ public class State implements Thermostat {
         this.on = on;
     }
 
-    public Instant getTime() {
-        return time;
+    public Timestamp getDate() {
+        return date;
     }
 
-    public void setTime(Instant time) {
-        this.time = time;
+    public void setDate(Timestamp date) {
+        this.date = date;
     }
 
 }
