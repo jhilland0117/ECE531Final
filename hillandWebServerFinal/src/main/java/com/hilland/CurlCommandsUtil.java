@@ -64,6 +64,7 @@ public final class CurlCommandsUtil {
 
     public static NanoHTTPD.Response performPost(NanoHTTPD.IHTTPSession session) {
         try {
+            System.out.println("URI: " + session.getUri());
             session.parseBody(new HashMap<>());
             Thermostat thermostat = parseTempParams(session.getQueryParameterString());
 
@@ -107,8 +108,6 @@ public final class CurlCommandsUtil {
                     return null;
                 }
                 return new Temperature(temp, time);
-            } else if (type.equals(REPORT)) {
-
             }
         } else {
             System.out.println("NODELIM: " + input);
