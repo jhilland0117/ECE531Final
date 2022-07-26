@@ -83,6 +83,29 @@ public final class JDBCConnection {
         return temps;
     }
 
+    public static final List<Report> getAllReports() {
+        List<Report> reports = new ArrayList<>();
+        String select = "select * from temps";
+
+        try ( Connection conn = setupConnection()) {
+
+            Statement statement = conn.createStatement();
+            ResultSet resultSet = statement.executeQuery(select);
+            while (resultSet.next()) {
+
+                Report obj = new Report();
+                obj.setId(resultSet.getLong("ID"));
+                obj.setTemp(resultSet.getInt("TEMP"));
+                obj.setDate(resultSet.getTimestamp("DATE"));
+                reports.add(obj);
+            }
+
+        } catch (SQLException ex) {
+            System.err.format("SQL State: %s\n%s", ex.getSQLState(), ex.getMessage());
+        }
+        return reports;
+    }
+
     // TODO: visitor pattern!
     public static final String handleType(Thermostat thermostat) {
         if (thermostat instanceof Temperature) {
@@ -109,8 +132,8 @@ public final class JDBCConnection {
             System.err.format("SQL State: %s\n%s", ex.getSQLState(), ex.getMessage());
             return "Post state Failed\n";
         }
-        
-        return "Post Report successful";
+
+        return "Post Report successful\n";
     }
 
     public static final String addState(State state) {

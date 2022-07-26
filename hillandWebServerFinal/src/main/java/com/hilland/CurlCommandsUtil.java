@@ -56,6 +56,12 @@ public final class CurlCommandsUtil {
                     jsonResp = gson.toJson(State.buildState(true));
                 }
                 jsonResp = gson.toJson(state);
+            } else if (route.equals(REPORT)) {
+                List<Report> reports = JDBCConnection.getAllReports();
+                if (reports.isEmpty()) {
+                    return failedAttempt("get request has empty results");
+                }
+                jsonResp = gson.toJson(reports);
             }
 
             return newFixedLengthResponse(jsonResp);
@@ -83,14 +89,14 @@ public final class CurlCommandsUtil {
 
     public static NanoHTTPD.Response performDelete(NanoHTTPD.IHTTPSession session) {
         String route = session.getUri().replace("/", "");
-        if (route == TEMP)  {
+        if (route == TEMP) {
             String result = JDBCConnection.deleteTemp(getIndex(session.getUri()));
             return newFixedLengthResponse(result);
         } else if (route == REPORT) {
             String result = JDBCConnection.deleteTemp(getIndex(session.getUri()));
             return newFixedLengthResponse(result);
         }
-        
+
         return failedAttempt("failed to delete object, make sure correct route");
     }
 
