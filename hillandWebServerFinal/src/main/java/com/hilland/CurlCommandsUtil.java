@@ -34,7 +34,7 @@ public final class CurlCommandsUtil {
     public static NanoHTTPD.Response performGet(NanoHTTPD.IHTTPSession session) {
         String jsonResp = null;
         String route = getRoute(session.getUri());
-        String param = getIndex(session.getUri());
+        String param = cleanValue(session.getUri());
         Gson gson = new Gson();
 
         if (route != null) {
@@ -112,10 +112,10 @@ public final class CurlCommandsUtil {
     public static NanoHTTPD.Response performDelete(NanoHTTPD.IHTTPSession session) {
         String route = session.getUri().replace("/", "");
         if (route == TEMP) {
-            String result = JDBCConnection.deleteTemp(getIndex(session.getUri()));
+            String result = JDBCConnection.deleteTemp(cleanValue(session.getUri()));
             return newFixedLengthResponse(result);
         } else if (route == REPORT) {
-            String result = JDBCConnection.deleteTemp(getIndex(session.getUri()));
+            String result = JDBCConnection.deleteTemp(cleanValue(session.getUri()));
             return newFixedLengthResponse(result);
         }
 
@@ -138,13 +138,13 @@ public final class CurlCommandsUtil {
             int temp = Integer.parseInt(values[1]);
             return new Temperature(temp, time);
         } else if (route.equals(REPORT)) {
-            int temp = Integer.parseInt(input);
+            int temp = Integer.parseInt(cleanValue(input));
             return Report.buildReport(temp);
         }
         return null;
     }
 
-    private static String getIndex(String param) {
+    private static String cleanValue(String param) {
         return param.replaceAll("[^0-9]", "");
     }
 

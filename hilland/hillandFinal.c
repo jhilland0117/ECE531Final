@@ -274,7 +274,7 @@ static int read_values(void) {
         return NO_FILE;
     }
 
-    //while (true) {
+    while (true) {
 
         // read temp and send post to webserver for thermostat
         read_temp();
@@ -314,8 +314,8 @@ static int read_values(void) {
 
         }
         
-        sleep(1);
-    //}
+        sleep(3);
+    }
     
     return ERR_WTF;
 }
