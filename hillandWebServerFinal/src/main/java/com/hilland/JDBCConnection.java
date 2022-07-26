@@ -73,12 +73,12 @@ public final class JDBCConnection {
     public static final String addState(State state) {
         String insert = null;
         if (state.isOn()) {
-            insert = "insert into state (state, time) values ('', '"
-                    + state.getTime()
+            insert = "insert into state (state, date) values ('', '"
+                    + state.getDate()
                     + "')";
         } else {
-            insert = "insert into state (state, time) values (NULL, '"
-                    + state.getTime()
+            insert = "insert into state (state, date) values (NULL, '"
+                    + state.getDate()
                     + "')";
         }
 
