@@ -10,20 +10,20 @@ public class State implements Thermostat {
 
     // true is on, false is off
     private Timestamp date;
-    private String state;
+    private String value;
 
     public static State buildState(String value) {
         State state = new State();
-        state.setState(value);
+        state.setValue(value);
         return state;
     }
 
-    public String getState() {
-        return state;
+    public String getValue() {
+        return value;
     }
 
-    public void setState(String state) {
-        this.state = state;
+    public void setValue(String value) {
+        this.value = value;
     }
 
     public Timestamp getDate() {
