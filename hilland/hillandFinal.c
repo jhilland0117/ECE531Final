@@ -11,7 +11,6 @@
 #include <syslog.h>
 #include <argp.h>
 #include "../jsmn/jsmn.h"
-#include "json.c"
 
 #define NO_ARG          0
 #define OK              0
@@ -260,33 +259,49 @@ static void read_temp(void) {
     buffer = malloc((size + 1) * sizeof(*buffer)); 
     fread(buffer, size, 1, fp);
     buffer[size] = '\0';
-    printf("%s\n", buffer);
     
     send_http_request(REPORT_URL, buffer, "POST", true);
 }
 
-static void handle_json(void) {
-    // get commands from web server
-    //char* json = "http://52.8.135.131:8080/state";
-    char *json = "{\"on\":true}";
+static char * json_token_tostr(char *js, jsmntok_t *t) {
+    js[t->end] = '\0';
+    return js + t->start;
+}
 
-    jsmn_parser p;
-    jsmntok_t tokens[128]; 
-    jsmn_init(&p);
-    int r = jsmn_parse(&p, json, strlen(json), tokens, sizeof(tokens) / sizeof(tokens[0]));
+jsmntok_t * json_tokenise(char *js)
+{
+    jsmn_parser parser;
+    jsmn_init(&parser);
 
-    if (r < 0) {
-        printf("Failed to parse JSON: %d\n", r);
-        return ERR_WTF;
+    unsigned int n = 256;
+
+    jsmntok_t *tokens = malloc(sizeof(jsmntok_t) * n);
+
+    int ret = jsmn_parse(&parser, js, strlen(js), tokens, n);
+
+    while (ret == JSMN_ERROR_NOMEM)
+    {
+        n = n * 2 + 1;
+        tokens = realloc(tokens, sizeof(jsmntok_t) * n);
+        ret = jsmn_parse(&parser, js, strlen(js), tokens, n);
     }
 
-    for (int i = 0; i < r; i++) {
-        
+    return tokens;
+}
+
+static void handle_json(void) {
+    // get commands from web server
+    char* json = send_http_request(STATE_URL, NULL, "GET", false);
+    // char *json = "{\"on\":true}";
+
+    jsmntok_t *tokens = json_tokenise(json);
+
+    for (int i = 0; i < 3; i++) {
         jsmntok_t *t = &tokens[i];
         // assume root is array
         if (t->type != JSMN_ARRAY) {
             if (t->type == JSMN_STRING) {
-                printf("  * %.*s\n", t->end - t->start, json + t->start);
+                printf("key: %.*s\n", t->end - t->start, json + t->start);
             } else if (t->type == JSMN_OBJECT) {
                 // noop
             } else if (t->type == JSMN_PRIMITIVE) {
@@ -294,13 +309,11 @@ static void handle_json(void) {
                 printf("  * %s\n", state);
             }
         }
-
     }
 }
 
 static int read_values(void) {
 
-    syslog(LOG_INFO, "Reading temp/status values.");
     // check that SIM has created files for use
     if (!file_exists(TEMP_FILENAME) || !file_exists(STATE_FILENAME) ) {
         syslog(LOG_ERR, "Simulation file does not exist.");
