@@ -1,6 +1,7 @@
 package com.hilland.domain;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 
 /**
  * create database thermostat;
@@ -27,6 +28,7 @@ public class Temperature implements Thermostat {
 
     public Temperature(int temp) {
         this.temp = temp;
+        this.date = Timestamp.from(Instant.now());
     }
 
     public Long getId() {
