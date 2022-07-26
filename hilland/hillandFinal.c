@@ -27,7 +27,8 @@
 #define DAEMON_NAME     "HillandFinalDaemon"
 
 // params, move to config file
-static const char* URL = "http://52.8.135.131:8080/";
+static const char* STATE_URL = "http://52.8.135.131:8080/state";
+static const char* TEMP_URL = "http://52.8.135.131:8080/state";
 static const char* TEMP_FILENAME = "/tmp/temp";
 static const char* STATE_FILENAME = "/tmp/status";
 
@@ -131,10 +132,6 @@ static char* send_http_request(char *url, char *message, char *type, bool verb) 
         return NULL;
     }
     return chunk.response;
-}
-
-static char* send_http_daemon(char *message, char *type, bool verb) {
-    return send_http_request(URL, message, type, verb);
 }
 
 static int daemonize(void) {
@@ -251,23 +248,20 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 }
 
 static void read_temp(void) {
-    int temp = 0;
-    FILE* tempFile = NULL;
-    tempFile = fopen(TEMP_FILENAME, "r");
-    fscanf(tempFile, "%d", &temp); 
-    // printf("TEMP READ: %d\n", i);
-    fclose(tempFile);
-    char *message = "report:" + temp;
-    send_http_daemon(NULL, "POST", false);
-    return i;
-}
+    char *buffer = NULL;
+    size_t size = 0;
 
-static void read_state(void) {
-    FILE* tempFile = NULL;
-    tempFile = fopen(TEMP_FILENAME, "r");
-    fscanf(tempFile, "%d", &i); 
-    fclose(tempFile);
-    return i;
+    /* Open your_file in read-only mode */
+    FILE *fp = fopen(TEMP_FILENAME, "r");
+    fseek(fp, 0, SEEK_END);
+    size = ftell(fp);
+    rewind(fp);
+    buffer = malloc((size + 1) * sizeof(*buffer)); 
+    fread(buffer, size, 1, fp);
+    buffer[size] = '\0';
+    printf("%s\n", buffer);
+    
+    send_http_request(TEMP_URL, buffer, "POST", true);
 }
 
 static int read_values(void) {
@@ -283,10 +277,9 @@ static int read_values(void) {
 
         // read temp and send post to webserver for thermostat
         read_temp();
-        read_state();
 
         // get commands from web server
-        char* json = send_http_daemon(NULL, "GET", false);
+        char* json = send_http_request(STATE_URL, NULL, "GET", false);
 
         jsmn_parser p;
         jsmntok_t tokens[128]; 
@@ -311,12 +304,14 @@ static int read_values(void) {
                 } else if (t->type == JSMN_OBJECT) {
                     // noop
                 } else if (t->type == JSMN_PRIMITIVE) {
-                    printf("  * %.*s\n", t->end - t->start, json + t->start);
+                    char *state = json_token_tostr(json, t);
+                    printf("  * %s\n", state);
+
+                    // write state to file!!
                 }
             }
 
         }
-
         
         sleep(1);
     //}

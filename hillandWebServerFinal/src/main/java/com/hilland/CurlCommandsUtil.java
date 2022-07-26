@@ -35,7 +35,6 @@ public final class CurlCommandsUtil {
         Gson gson = new Gson();
 
         if (route != null) {
-
             if (route.equals(TEMP)) {
                 if (param != null && !param.equals("")) {
                     Temperature temp = JDBCConnection.getTemp(param);
@@ -90,25 +89,29 @@ public final class CurlCommandsUtil {
 
     // expected input is state:true|false or temp:time,temp
     private static Thermostat parseTempParams(String input) {
-        String[] typeSeparation = input.split(TYPE_DELIM);
-        String type = typeSeparation[0];
-        String params = typeSeparation[1];
+        if (input.contains(TYPE_DELIM)) {
+            String[] typeSeparation = input.split(TYPE_DELIM);
+            String type = typeSeparation[0];
+            String params = typeSeparation[1];
 
-        System.out.println("TYPE: " + type + ", params: " + params + "\n");
+            System.out.println("TYPE: " + type + ", params: " + params + "\n");
 
-        if (type.equals(STATE)) {
-            State state = new State();
-            state.setOn(Boolean.parseBoolean(params));
-        } else if (type.equals(TEMP)) {
-            String[] values = params.split(DELIM);
-            int time = Integer.parseInt(values[0]);
-            int temp = Integer.parseInt(values[1]);
-            if (time > 24 || time < 0 || temp < 0) {
-                return null;
+            if (type.equals(STATE)) {
+                State state = new State();
+                state.setOn(Boolean.parseBoolean(params));
+            } else if (type.equals(TEMP)) {
+                String[] values = params.split(DELIM);
+                int time = Integer.parseInt(values[0]);
+                int temp = Integer.parseInt(values[1]);
+                if (time > 24 || time < 0 || temp < 0) {
+                    return null;
+                }
+                return new Temperature(temp, time);
+            } else if (type.equals(REPORT)) {
+
             }
-            return new Temperature(temp, time);
-        } else if (type.equals(REPORT)) {
-
+        } else {
+            System.out.println("NODELIM: " + input);
         }
         return null;
     }
