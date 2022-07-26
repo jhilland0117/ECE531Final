@@ -32,7 +32,6 @@ public final class CurlCommandsUtil {
         String jsonResp = null;
         String route = getRoute(session.getUri());
         String param = getIndex(session.getUri());
-        System.out.println("route: " + route + " param " + param + "\n");
         Gson gson = new Gson();
 
         if (route != null) {
@@ -52,10 +51,12 @@ public final class CurlCommandsUtil {
                     jsonResp = gson.toJson(temps);
                 }
             } else if (route.equals(STATE)) {
+                System.out.println("handling state route");
                 State state = JDBCConnection.getState();
                 if (state == null) {
                     jsonResp = gson.toJson(State.buildState(true));
                 }
+                jsonResp = gson.toJson(state);
             }
 
             return newFixedLengthResponse(jsonResp);
