@@ -47,7 +47,6 @@ public final class JDBCConnection {
             State state = new State();
             while (resultSet.next()) {
                 String currentState = resultSet.getString("STATE");
-                System.out.println("state: " + currentState);
                 if (currentState != null) {
                     state.setOn(true);
                 } else {
