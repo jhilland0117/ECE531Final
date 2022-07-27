@@ -124,11 +124,11 @@ public final class CurlCommandsUtil {
         State currentState = JDBCConnection.getState();
         
         if (currentState.isOn()) {
-            if (reportedTemp.getTemp() > setting.getTemp()) {
+            if (reportedTemp.getTemp() > setting.getTemp2()) {
                 return JDBCConnection.updateState(false);
             }
         } else {
-            if (reportedTemp.getTemp() > setting.getTemp2()) {
+            if (reportedTemp.getTemp() < setting.getTemp()) {
                 return JDBCConnection.updateState(true);
             }
         }
