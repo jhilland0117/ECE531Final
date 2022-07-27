@@ -10,7 +10,6 @@
 #include <sys/stat.h>
 #include <syslog.h>
 #include <argp.h>
-#include "../jsmn/jsmn.h"
 
 #define NO_ARG          0
 #define OK              0
@@ -54,7 +53,6 @@ struct Arguments {
  };
  
  struct Curlmem chunk = {0};
- char *KEYS[] = { "id", "temp", "time"};
 
 // argp options required for output to user
 static struct argp_option options[] = {
@@ -256,32 +254,6 @@ static void read_temp(void) {
     send_http_request(REPORT_URL, buffer, "POST", true);
 }
 
-static char * json_token_tostr(char *js, jsmntok_t *t) {
-    js[t->end] = '\0';
-    return js + t->start;
-}
-
-jsmntok_t * json_tokenise(char *js)
-{
-    jsmn_parser parser;
-    jsmn_init(&parser);
-
-    unsigned int n = 256;
-
-    jsmntok_t *tokens = malloc(sizeof(jsmntok_t) * n);
-
-    int ret = jsmn_parse(&parser, js, strlen(js), tokens, n);
-
-    while (ret == JSMN_ERROR_NOMEM)
-    {
-        n = n * 2 + 1;
-        tokens = realloc(tokens, sizeof(jsmntok_t) * n);
-        ret = jsmn_parse(&parser, js, strlen(js), tokens, n);
-    }
-
-    return tokens;
-}
-
 static int write_state(char *state) {
     FILE *fp = fopen(STATE_FILENAME, "w");
     if (fp == NULL) {
@@ -294,31 +266,17 @@ static int write_state(char *state) {
 }
 
 // handle curl request to know if system should be on or off
-static void handle_json(void) {
+static void handle_state_get(void) {
     // get commands from web server
-    char* json = send_http_request(STATE_URL, NULL, "GET", false);
-
-    jsmntok_t *tokens = json_tokenise(json);
-
-    for (int i = 0; i < 3; i++) {
-        jsmntok_t *t = &tokens[i];
-        // assume root is array
-        if (t->type != JSMN_ARRAY) {
-            if (t->type == JSMN_STRING) {
-                // printf("key: %.*s\n", t->end - t->start, json + t->start);
-            } else if (t->type == JSMN_OBJECT) {
-                // noop
-            } else if (t->type == JSMN_PRIMITIVE) {
-                // write out state to file
-                const char *state = json_token_tostr(json, t);
-                if (strcmp(state, "true") == 0) {
-                    write_state("ON");
-                } else if (strcmp(state, "false") == 0) {
-                    write_state("OFF");
-                }
-            }
-        }
+    char *state = send_http_request(STATE_URL, NULL, "GET", false);
+    if (strcmp(state, "true") == 0) {
+        write_state("ON");
+    } else if (strcmp(state, "false") == 0) {
+        write_state("OFF");
     }
+
+    chunk.response = NULL;
+    chunk.size = NULL;
 }
 
 static int handle_work(void) {
@@ -332,7 +290,7 @@ static int handle_work(void) {
     while (true) {
         // read temp and send post to webserver for thermostat
         read_temp();
-        handle_json();        
+        handle_state_get();        
         sleep(3);
     }
     
