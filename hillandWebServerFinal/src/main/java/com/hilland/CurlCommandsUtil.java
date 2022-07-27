@@ -101,7 +101,7 @@ public final class CurlCommandsUtil {
             return failedAttempt("unable to commit post");
         }
     }
-    
+
     private static String decodePeriod() {
         Calendar time = Calendar.getInstance();
         int hour = time.get(Calendar.HOUR_OF_DAY);
@@ -113,7 +113,7 @@ public final class CurlCommandsUtil {
             return "MORNING";
         }
     }
-    
+
     private static Temperature getTemperatureSetting() {
         String timeofday = decodePeriod();
         return JDBCConnection.getTemperatureSetting(timeofday);
@@ -122,21 +122,19 @@ public final class CurlCommandsUtil {
     private static String handleTemperatureChange(Report reportedTemp) {
         Temperature setting = getTemperatureSetting();
         State currentState = JDBCConnection.getState();
-        
+
         if (currentState.isOn()) {
-            System.out.println("ON " + reportedTemp.getTemp() + " " + setting.getTemp2());
             if (reportedTemp.getTemp() > setting.getTemp2()) {
-                System.out.println("TURN OFF");
                 return JDBCConnection.updateState(false);
             }
-        } else {
-            System.out.println("OFF " + reportedTemp.getTemp() + " " + setting.getTemp());
+        }
+
+        if (!currentState.isOn()) {
             if (reportedTemp.getTemp() < setting.getTemp()) {
-                System.out.println("TURN ON");
                 return JDBCConnection.updateState(true);
             }
         }
-        
+
         return null;
     }
 
@@ -175,7 +173,7 @@ public final class CurlCommandsUtil {
         }
         return null;
     }
-    
+
     private static String cleanDecimal(String input) {
         return cleanValue(input.replace(DEC, ""));
     }
