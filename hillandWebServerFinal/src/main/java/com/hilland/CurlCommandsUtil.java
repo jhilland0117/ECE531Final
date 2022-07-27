@@ -123,16 +123,12 @@ public final class CurlCommandsUtil {
         Temperature setting = getTemperatureSetting();
         State currentState = JDBCConnection.getState();
 
-        if (currentState.isOn()) {
-            if (reportedTemp.getTemp() > setting.getTemp2()) {
-                return JDBCConnection.updateState(false);
-            }
+        if (reportedTemp.getTemp() > setting.getTemp2()) {
+            return JDBCConnection.updateState(false);
         }
 
-        if (!currentState.isOn()) {
-            if (reportedTemp.getTemp() < setting.getTemp()) {
-                return JDBCConnection.updateState(true);
-            }
+        if (reportedTemp.getTemp() < setting.getTemp()) {
+            return JDBCConnection.updateState(true);
         }
 
         return null;
