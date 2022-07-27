@@ -124,7 +124,7 @@ public final class CurlCommandsUtil {
         State currentState = JDBCConnection.getState();
         
         if (currentState.isOn()) {
-            System.out.println("ON " + reportedTemp.getTemp() + " " + setting.getTemp());
+            System.out.println("ON " + reportedTemp.getTemp() + " " + setting.getTemp2());
             if (reportedTemp.getTemp() > setting.getTemp2()) {
                 System.out.println("TURN OFF");
                 return JDBCConnection.updateState(false);
