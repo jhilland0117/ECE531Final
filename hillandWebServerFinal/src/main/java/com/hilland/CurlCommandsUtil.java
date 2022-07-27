@@ -157,7 +157,6 @@ public final class CurlCommandsUtil {
             String id = values[0];
             int temp = Integer.parseInt(values[1]);
             int temp2 = Integer.parseInt(values[2]);
-            System.out.println(id + " " + temp + " " + temp2);
             return new Temperature(temp, temp2, id);
         } else if (route.equals(REPORT)) {
             int temp = Integer.parseInt(cleanDecimal(input));
