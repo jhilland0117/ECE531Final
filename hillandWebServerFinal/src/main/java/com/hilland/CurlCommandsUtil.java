@@ -23,6 +23,7 @@ import static com.hilland.JDBCConnection.addTemp;
 public final class CurlCommandsUtil {
 
     private static final String DELIM = ",";
+    private static final String DEC = ".00000";
     private static final String TYPE_DELIM = ":";
     private static final String STATE = "state";
     private static final String TEMP = "temp";
@@ -141,10 +142,8 @@ public final class CurlCommandsUtil {
         return null;
     }
     
-    private static String cleanDecimal(String param) {
-        String[] values = param.split(".");
-        System.out.println("VALES: " + values[0]);
-        return cleanValue(values[0]);
+    private static String cleanDecimal(String input) {
+        return cleanValue(input.replace(DEC, ""));
     }
 
     private static String cleanValue(String param) {
