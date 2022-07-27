@@ -283,10 +283,15 @@ jsmntok_t * json_tokenise(char *js)
     return tokens;
 }
 
-static void write_state(char *state) {
+static int write_state(char *state) {
     FILE *fp = fopen(STATE_FILENAME, "w");
-    fprintf(fp, state);
+    if (fp == NULL) {
+        printf("unable to open file for writing\n");
+        return ERR_WTF;
+    }
+    fputs(state, fp);
     fclose(fp);
+    return OK;
 }
 
 // handle curl request to know if system should be on or off
@@ -306,9 +311,13 @@ static void handle_json(void) {
                 // noop
             } else if (t->type == JSMN_PRIMITIVE) {
                 // write out state to file
-                char *state = json_token_tostr(json, t);
-                // write_state(state);
-                // printf("  * %s\n", state);
+                const char *state = json_token_tostr(json, t);
+                if (strcmp(state, "true") == 0) {
+                    printf("its true\n");
+                    write_state("ON");
+                } else if (strcmp(state, "false") == 0) {
+                    write_state("OFF");
+                }
             }
         }
     }
