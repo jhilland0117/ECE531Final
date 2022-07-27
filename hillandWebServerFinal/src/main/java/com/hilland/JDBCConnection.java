@@ -69,6 +69,7 @@ public final class JDBCConnection {
             while (resultSet.next()) {
                 temp.setId(resultSet.getLong("ID"));
                 temp.setTemp(resultSet.getInt("TEMP"));
+                temp.setTemp(resultSet.getInt("TEMP2"));
                 temp.setSetting(resultSet.getString("SETTING"));
             }
             return temp;
