@@ -194,18 +194,12 @@ public final class JDBCConnection {
                 temp.getTemp() + 
                 ", temp2 = " + 
                 temp.getTemp2() + 
-                "where id = " + 
+                " where id = " + 
                 temp.getId();
-
-        String insert = "insert into temps (temp, date) values ('"
-                + temp.getTemp()
-                + "', '"
-                + temp.getDate()
-                + "')";
 
         try ( Connection conn = setupConnection()) {
             Statement statement = (Statement) conn.createStatement();
-            statement.execute(insert);
+            statement.execute(update);
         } catch (SQLException ex) {
             System.err.format("SQL State: %s\n%s", ex.getSQLState(), ex.getMessage());
             return "Post temp Failed\n";
