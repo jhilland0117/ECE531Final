@@ -3,7 +3,6 @@ package com.hilland;
 import com.hilland.domain.Report;
 import com.hilland.domain.State;
 import com.hilland.domain.Temperature;
-import com.hilland.domain.Thermostat;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;

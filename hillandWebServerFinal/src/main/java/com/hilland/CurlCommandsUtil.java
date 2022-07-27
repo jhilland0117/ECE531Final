@@ -101,6 +101,7 @@ public final class CurlCommandsUtil {
     }
 
     private static String handleTemperatureChange(Report temperature) {
+        System.out.println("REPORT TEMP: " + temperature.getTemp());
         if (temperature.getTemp() < 20) {
             return JDBCConnection.updateState(true);
         } else if (temperature.getTemp() > 24) {
