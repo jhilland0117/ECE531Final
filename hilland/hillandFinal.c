@@ -309,9 +309,9 @@ static void handle_json(void) {
                 // write out state to file
                 char *state = json_token_tostr(json, t);
                 if (strcmp(state, "true") == 0) {
-                    write_state("on");
+                    write_state("ON");
                 } else {
-                    write_state("off");
+                    write_state("OFF");
                 }
                 // printf("  * %s\n", state);
             }

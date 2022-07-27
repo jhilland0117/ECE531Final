@@ -101,7 +101,6 @@ public final class CurlCommandsUtil {
     }
 
     private static String handleTemperatureChange(Report temperature) {
-        System.out.println("REPORT TEMP: " + temperature.getTemp());
         if (temperature.getTemp() < 20) {
             return JDBCConnection.updateState(true);
         } else if (temperature.getTemp() > 24) {
@@ -136,10 +135,15 @@ public final class CurlCommandsUtil {
             int temp = Integer.parseInt(values[1]);
             return new Temperature(temp, time);
         } else if (route.equals(REPORT)) {
-            int temp = Integer.parseInt(cleanValue(input));
+            int temp = Integer.parseInt(cleanDecimal(input));
             return Report.buildReport(temp);
         }
         return null;
+    }
+    
+    private static String cleanDecimal(String param) {
+       String[] values = param.split(".");
+        return cleanValue(values[1]);
     }
 
     private static String cleanValue(String param) {
