@@ -293,7 +293,6 @@ static void write_state(char *state) {
 static void handle_json(void) {
     // get commands from web server
     char* json = send_http_request(STATE_URL, NULL, "GET", false);
-    // char *json = "{\"on\":true}";
 
     jsmntok_t *tokens = json_tokenise(json);
 
@@ -308,11 +307,7 @@ static void handle_json(void) {
             } else if (t->type == JSMN_PRIMITIVE) {
                 // write out state to file
                 char *state = json_token_tostr(json, t);
-                if (strcmp(state, "true") == 0) {
-                    write_state("ON");
-                } else {
-                    write_state("OFF");
-                }
+                // write_state(state);
                 // printf("  * %s\n", state);
             }
         }
