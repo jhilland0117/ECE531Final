@@ -9,6 +9,7 @@ import fi.iki.elonen.NanoHTTPD;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Calendar;
 
 import static fi.iki.elonen.NanoHTTPD.MIME_PLAINTEXT;
 import static fi.iki.elonen.NanoHTTPD.newFixedLengthResponse;
@@ -23,7 +24,7 @@ import static com.hilland.JDBCConnection.addTemp;
 public final class CurlCommandsUtil {
 
     private static final String DELIM = ",";
-    private static final String DEC = ".00000";
+    private static final String DEC = ".000000";
     private static final String TYPE_DELIM = ":";
     private static final String STATE = "state";
     private static final String TEMP = "temp";
@@ -100,11 +101,29 @@ public final class CurlCommandsUtil {
             return failedAttempt("unable to commit post");
         }
     }
+    
+    private static String decodePeriod() {
+        Calendar time = Calendar.getInstance();
+        int hour = time.get(Calendar.HOUR_OF_DAY);
+        if (hour >= 18) {
+            return "EVENING";
+        } else if (hour >= 12) {
+            return "AFTERNOON";
+        } else {
+            return "MORNING";
+        }
+    }
+    
+    private static Temperature getTemperatureSetting() {
+        String timeofday = decodePeriod();
+        return JDBCConnection.getTemperatureSetting(timeofday);
+    }
 
     private static String handleTemperatureChange(Report temperature) {
-        if (temperature.getTemp() < 20) {
+        Temperature setting = getTemperatureSetting();
+        if (temperature.getTemp() < setting.getTemp()) {
             return JDBCConnection.updateState(true);
-        } else if (temperature.getTemp() > 24) {
+        } else if (temperature.getTemp() > setting.getTemp2()) {
             return JDBCConnection.updateState(false);
         }
         return null;
@@ -128,13 +147,17 @@ public final class CurlCommandsUtil {
                 message);
     }
 
-    // expected input for temp temp:time,temp
+    // temp post requirement example, temp is low, temp2 is high
+    // MORNING,temp,temp2
+    // AFTERNOON,temp,temp2
+    // EVENING,temp,temp2
     private static Thermostat parseRouteParams(String input, String route) {
         if (route.equals(TEMP)) {
             String[] values = input.split(DELIM);
             String time = values[0];
             int temp = Integer.parseInt(values[1]);
-            return new Temperature(temp, time);
+            int temp2 = Integer.parseInt(values[2]);
+            return new Temperature(temp, temp2, time);
         } else if (route.equals(REPORT)) {
             int temp = Integer.parseInt(cleanDecimal(input));
             return Report.buildReport(temp);

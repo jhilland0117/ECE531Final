@@ -253,7 +253,7 @@ static void read_temp(void) {
     buffer = malloc((size + 1) * sizeof(*buffer)); 
     fread(buffer, size, 1, fp);
     buffer[size] = '\0';
-    
+    printf("%s\n", buffer);
     send_http_request(REPORT_URL, buffer, "POST", true);
 }
 

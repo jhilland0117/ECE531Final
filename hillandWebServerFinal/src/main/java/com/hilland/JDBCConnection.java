@@ -60,6 +60,24 @@ public final class JDBCConnection {
         return null;
     }
 
+    public static final Temperature getTemperatureSetting(String setting) {
+        String select = "select * from temps where setting = " + setting;
+        try ( Connection conn = setupConnection()) {
+            Statement statement = conn.createStatement();
+            ResultSet resultSet = statement.executeQuery(select);
+            Temperature temp = new Temperature();
+            while (resultSet.next()) {
+                temp.setId(resultSet.getLong("ID"));
+                temp.setTemp(resultSet.getInt("TEMP"));
+                temp.setSetting(resultSet.getString("SETTING"));
+            }
+            return temp;
+        } catch (SQLException ex) {
+            System.err.format("SQL State: %s\n%s", ex.getSQLState(), ex.getMessage());
+        }
+        return null;
+    }
+
     public static final List<Temperature> getAllTemps() {
         List<Temperature> temps = new ArrayList<>();
         String select = "select * from temps";
@@ -131,7 +149,7 @@ public final class JDBCConnection {
         } else {
             update = "update state set state = NULL";
         }
-        
+
         try ( Connection conn = setupConnection()) {
             Statement statement = (Statement) conn.createStatement();
             statement.execute(update);
@@ -139,7 +157,7 @@ public final class JDBCConnection {
             System.err.format("SQL State: %s\n%s", ex.getSQLState(), ex.getMessage());
             return "Update state Failed\n";
         }
-        
+
         return "Post state Failed\n";
     }
 
