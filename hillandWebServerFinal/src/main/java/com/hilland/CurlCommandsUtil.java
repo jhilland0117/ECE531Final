@@ -142,8 +142,8 @@ public final class CurlCommandsUtil {
     }
     
     private static String cleanDecimal(String param) {
-        System.out.println("PARAM: " + param);
         String[] values = param.split(".");
+        System.out.println("VALES: " + values[0]);
         return cleanValue(values[0]);
     }
 
