@@ -23,10 +23,10 @@ public class Temperature implements Thermostat {
     public Temperature() {
     }
 
-    public Temperature(int temp, int temp2, String setting) {
+    public Temperature(int temp, int temp2, String id) {
         this.temp = temp;
         this.temp2 = temp2;
-        this.setting = setting;
+        this.id = Long.parseLong(id);
     }
 
     public Long getId() {

@@ -15,7 +15,7 @@ import static fi.iki.elonen.NanoHTTPD.MIME_PLAINTEXT;
 import static fi.iki.elonen.NanoHTTPD.newFixedLengthResponse;
 import static com.hilland.JDBCConnection.addReport;
 import static com.hilland.JDBCConnection.addState;
-import static com.hilland.JDBCConnection.addTemp;
+import static com.hilland.JDBCConnection.updateTemp;
 
 /**
  *
@@ -88,7 +88,7 @@ public final class CurlCommandsUtil {
             // TODO: so much cleaner if used visitor pattern
             String result = null;
             if (thermostat instanceof Temperature) {
-                result = addTemp((Temperature) thermostat);
+                result = updateTemp((Temperature) thermostat);
             } else if (thermostat instanceof State) {
                 result = addState((State) thermostat);
             } else if (thermostat instanceof Report) {
@@ -148,16 +148,16 @@ public final class CurlCommandsUtil {
     }
 
     // temp post requirement example, temp is low, temp2 is high
-    // MORNING,temp,temp2
-    // AFTERNOON,temp,temp2
-    // EVENING,temp,temp2
+    // 1,temp,temp2 (morning)
+    // 2,temp,temp2 (afternoon)
+    // 3,temp,temp2 (evening)
     private static Thermostat parseRouteParams(String input, String route) {
         if (route.equals(TEMP)) {
             String[] values = input.split(DELIM);
-            String time = values[0];
+            String id = values[0];
             int temp = Integer.parseInt(values[1]);
             int temp2 = Integer.parseInt(values[2]);
-            return new Temperature(temp, temp2, time);
+            return new Temperature(temp, temp2, id);
         } else if (route.equals(REPORT)) {
             int temp = Integer.parseInt(cleanDecimal(input));
             return Report.buildReport(temp);

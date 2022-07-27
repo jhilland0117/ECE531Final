@@ -188,15 +188,14 @@ public final class JDBCConnection {
     }
 
     // add a temp to the database
-    public static final String addTemp(Temperature temp) {
-
-        // check to see if this time already exists, so we dont contradict ourselves
-        for (Temperature dbTemp : getAllTemps()) {
-            if (dbTemp.getDate() == temp.getDate()) {
-                // we should do an update, but this is easier for now
-                deleteTemp(Long.toString(dbTemp.getId()));
-            }
-        }
+    public static final String updateTemp(Temperature temp) {
+        
+        String update = "update temps set temp = " + 
+                temp.getTemp() + 
+                ", temp2 = " + 
+                temp.getTemp2() + 
+                "where id = " + 
+                temp.getId();
 
         String insert = "insert into temps (temp, date) values ('"
                 + temp.getTemp()
