@@ -98,7 +98,7 @@ static size_t call_back(void *data, size_t size, size_t nmemb, void *userp) {
 }
 
 static char* send_http_request(char *url, char *message, char *type, bool verb) {
-    printf("sending %s request at url: %s\n", type, url);
+    // printf("sending %s request at url: %s\n", type, url);
     CURL *curl = curl_easy_init();
     if (curl) {
         CURLcode res;
@@ -111,7 +111,6 @@ static char* send_http_request(char *url, char *message, char *type, bool verb) 
         }
 
         if (verb) {
-            printf("sending message: %s\n", message);
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, message);
         } else {
             curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
@@ -120,11 +119,6 @@ static char* send_http_request(char *url, char *message, char *type, bool verb) 
 
         if (res != CURLE_OK) {
             return REQ_ERR;
-        }
-
-        // debug
-        if (type == "GET") {
-            // printf("%s\n", chunk.response);
         }
 
         curl_easy_cleanup(curl);
@@ -289,6 +283,13 @@ jsmntok_t * json_tokenise(char *js)
     return tokens;
 }
 
+static void write_state(char *state) {
+    FILE *fp = fopen(STATE_FILENAME, "w");
+    fprintf(fp, state);
+    fclose(fp);
+}
+
+// handle curl request to know if system should be on or off
 static void handle_json(void) {
     // get commands from web server
     char* json = send_http_request(STATE_URL, NULL, "GET", false);
@@ -301,18 +302,24 @@ static void handle_json(void) {
         // assume root is array
         if (t->type != JSMN_ARRAY) {
             if (t->type == JSMN_STRING) {
-                printf("key: %.*s\n", t->end - t->start, json + t->start);
+                // printf("key: %.*s\n", t->end - t->start, json + t->start);
             } else if (t->type == JSMN_OBJECT) {
                 // noop
             } else if (t->type == JSMN_PRIMITIVE) {
+                // write out state to file
                 char *state = json_token_tostr(json, t);
-                printf("  * %s\n", state);
+                if (strcmp(state, "true") == 0) {
+                    write_state("on")
+                } else {
+                    write_state("off");
+                }
+                // printf("  * %s\n", state);
             }
         }
     }
 }
 
-static int read_values(void) {
+static int handle_work(void) {
 
     // check that SIM has created files for use
     if (!file_exists(TEMP_FILENAME) || !file_exists(STATE_FILENAME) ) {
@@ -321,7 +328,6 @@ static int read_values(void) {
     }
 
     while (true) {
-
         // read temp and send post to webserver for thermostat
         read_temp();
         handle_json();        
@@ -357,7 +363,7 @@ int main(int argc, char **argv) {
             return ERR_WTF;
         }
     }
-    err = read_values();
+    err = handle_work();
     if (err != OK) {
         return ERR_WTF;
     }

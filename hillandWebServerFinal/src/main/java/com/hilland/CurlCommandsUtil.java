@@ -101,9 +101,9 @@ public final class CurlCommandsUtil {
     }
 
     private static String handleTemperatureChange(Report temperature) {
-        if (temperature.getTemp() < 50) {
+        if (temperature.getTemp() < 20) {
             return JDBCConnection.updateState(true);
-        } else if (temperature.getTemp() > 100) {
+        } else if (temperature.getTemp() > 24) {
             return JDBCConnection.updateState(false);
         }
         return null;
@@ -129,9 +129,6 @@ public final class CurlCommandsUtil {
 
     // expected input for temp temp:time,temp
     private static Thermostat parseRouteParams(String input, String route) {
-
-        System.out.println("TYPE: " + route + ", params: " + input + "\n");
-
         if (route.equals(TEMP)) {
             String[] values = input.split(DELIM);
             String time = values[0];
