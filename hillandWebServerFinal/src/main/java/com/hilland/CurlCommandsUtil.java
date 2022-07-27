@@ -27,7 +27,7 @@ public final class CurlCommandsUtil {
     private static final String DEC = ".000000";
     private static final String TYPE_DELIM = ":";
     private static final String STATE = "state";
-    private static final String TEMP = "temp";
+    private static final String TEMP = "temps";
     private static final String REPORT = "report";
 
     private CurlCommandsUtil() {
