@@ -90,6 +90,7 @@ public final class JDBCConnection {
 
                 Temperature obj = new Temperature();
                 obj.setId(resultSet.getLong("ID"));
+                obj.setSetting(resultSet.getString("SETTING"));
                 obj.setTemp(resultSet.getInt("TEMP"));
                 obj.setTemp2(resultSet.getInt("TEMP2"));
                 temps.add(obj);

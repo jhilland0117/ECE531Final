@@ -311,8 +311,7 @@ static void handle_json(void) {
             } else if (t->type == JSMN_PRIMITIVE) {
                 // write out state to file
                 const char *state = json_token_tostr(json, t);
-                if (strcmp(state, "true") == 0) {
-                    printf("its true\n");
+\                if (strcmp(state, "true") == 0) {
                     write_state("ON");
                 } else if (strcmp(state, "false") == 0) {
                     write_state("OFF");

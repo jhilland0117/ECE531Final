@@ -121,9 +121,9 @@ public final class CurlCommandsUtil {
 
     private static String handleTemperatureChange(Report temperature) {
         Temperature setting = getTemperatureSetting();
-        if (temperature.getTemp() < setting.getTemp()) {
+        if (temperature.getTemp() <= setting.getTemp()) {
             return JDBCConnection.updateState(true);
-        } else if (temperature.getTemp() > setting.getTemp2()) {
+        } else if (temperature.getTemp() >= setting.getTemp2()) {
             return JDBCConnection.updateState(false);
         }
         return null;
