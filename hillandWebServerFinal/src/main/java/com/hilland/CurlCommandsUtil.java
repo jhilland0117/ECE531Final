@@ -119,13 +119,20 @@ public final class CurlCommandsUtil {
         return JDBCConnection.getTemperatureSetting(timeofday);
     }
 
-    private static String handleTemperatureChange(Report temperature) {
+    private static String handleTemperatureChange(Report reportedTemp) {
         Temperature setting = getTemperatureSetting();
-        if (temperature.getTemp() <= setting.getTemp()) {
-            return JDBCConnection.updateState(true);
-        } else if (temperature.getTemp() >= setting.getTemp2()) {
-            return JDBCConnection.updateState(false);
+        State currentState = JDBCConnection.getState();
+        
+        if (currentState.isOn()) {
+            if (reportedTemp.getTemp() > setting.getTemp()) {
+                return JDBCConnection.updateState(false);
+            }
+        } else {
+            if (reportedTemp.getTemp() > setting.getTemp2()) {
+                return JDBCConnection.updateState(true);
+            }
         }
+        
         return null;
     }
 
