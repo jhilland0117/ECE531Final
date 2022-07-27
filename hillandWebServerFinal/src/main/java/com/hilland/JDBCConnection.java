@@ -61,7 +61,7 @@ public final class JDBCConnection {
     }
 
     public static final Temperature getTemperatureSetting(String setting) {
-        String select = "select * from temps where setting = " + setting;
+        String select = "select * from temps where setting = '" + setting + "'";
         try ( Connection conn = setupConnection()) {
             Statement statement = conn.createStatement();
             ResultSet resultSet = statement.executeQuery(select);
