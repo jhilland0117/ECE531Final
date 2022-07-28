@@ -31,18 +31,7 @@ Public IP for this instance with httpdnano running is
 http://52.8.135.131:8080
 
 ## Commands
-GET : get list of all time/temp setting values
-`curl http://52.8.135.131:8080/ # provides a list of all temperature settings`
-
-GET : get time and temperature setting by id
-`curl http://52.8.135.131:8080/id # to query temperature based on id`
-
-POST : add a new state or time/temperature setting to database
-`curl -X POST http://52.8.135.131:8080/ -d temp:time,tempValue`
-`curl -X POST http://52.8.135.131:8080/ -d state:true|false`
-
-DELETE : used to delete the temp/time value, cannot delete state
-`curl -X DELETE http://52.8.135.131:8080/id`
+needs to be updated
 
 
 ## Running the code
