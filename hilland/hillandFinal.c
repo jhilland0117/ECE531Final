@@ -302,7 +302,6 @@ static struct argp argp = {options, parse_opt, args_doc, doc};
 int main(int argc, char **argv) {
 
     int err;
-
     if (argc > 1) {
         // default arguments, which could be done in struct
         syslog(LOG_INFO, "Using command line rather than daemon script.");

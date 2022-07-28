@@ -16,7 +16,7 @@ DAEMON_NAME="hillandFinal"
 
 start() {
     printf "Starting $DAEMON_NAME: "
-    /usr/sbin/$DAEMON_NAME test
+    /usr/sbin/$DAEMON_NAME
     touch /var/lock/$DAEMON_NAME
     echo "OK"
 }
