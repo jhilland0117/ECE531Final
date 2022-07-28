@@ -96,14 +96,13 @@ static size_t call_back(void *data, size_t size, size_t nmemb, void *userp) {
 }
 
 static char* send_http_request(char *url, char *message, char *type, bool verb) {
-    // printf("sending %s request at url: %s\n", type, url);
     CURL *curl = curl_easy_init();
     if (curl) {
         CURLcode res;
         curl_easy_setopt(curl, CURLOPT_URL, url);
         curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, type);
         
-        if (type == "GET") {
+        if (strcmp(type, "GET") == 0) {
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, call_back);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
         }
