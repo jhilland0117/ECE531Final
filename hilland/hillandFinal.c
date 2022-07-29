@@ -140,7 +140,7 @@ static int daemonize(void) {
     }
 
     if (pid > 0) {
-        return OK;
+        exit(OK);
     }
 
     if (setsid() < -1) {
