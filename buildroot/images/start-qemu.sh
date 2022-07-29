@@ -1,14 +1,4 @@
 #!/bin/sh
-(
-BINARIES_DIR="${0%/*}/"
-cd ${BINARIES_DIR}
-
-if [ "${1}" = "serial-only" ]; then
-    EXTRA_ARGS='-nographic'
-else
-    EXTRA_ARGS='-serial stdio'
-fi
-
-export PATH="/home/jhilland/git/buildroot-2022.05/output/host/bin:${PATH}"
-exec qemu-system-arm -M versatilepb -kernel zImage -dtb versatile-pb.dtb -drive file=rootfs.ext2,if=scsi,format=raw -append "rootwait root=/dev/sda console=ttyAMA0,115200"  -net nic,model=rtl8139 -net user,hostfwd=tcp::2222-:22  ${EXTRA_ARGS}
-)
+# make sure you export your path for buildroot qemu-system-arm command!
+# export PATH="/buildroot-2022.05/output/host/bin:${PATH}"
+qemu-system-arm -M versatilepb -kernel zImage -dtb versatile-pb.dtb -drive file=rootfs.ext2,if=scsi,format=raw -append "root=/dev/sda console=ttyAMA0,115200" -serial stdio -net nic,model=rtl8139 -net user,hostfwd=tcp::2222-:22 -name Versatile_ARM_EXT2
