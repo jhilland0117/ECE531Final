@@ -99,9 +99,11 @@ static char* send_http_request(char *url, char *message, char *type, bool verb) 
     CURL *curl = curl_easy_init();
     if (curl) {
         CURLcode res;
+        FILE* outputFile = fopen("curloutput.txt", "wb");
         curl_easy_setopt(curl, CURLOPT_URL, url);
         curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, type);
-        
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, outputFile);
+
         if (strcmp(type, "GET") == 0) {
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, call_back);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
