@@ -141,7 +141,7 @@ public final class JDBCConnection {
             return "Post state Failed\n";
         }
 
-        return "Post Report successful\n";
+        return "";
     }
 
     public static final String updateState(boolean value) {
@@ -161,7 +161,7 @@ public final class JDBCConnection {
             return "Update state Failed\n";
         }
 
-        return "Post state Failed\n";
+        return "";
     }
 
     public static final String addState(State state) {
@@ -184,7 +184,7 @@ public final class JDBCConnection {
             return "Post state Failed\n";
         }
 
-        return "Post state Successful\n";
+        return "";
 
     }
 
