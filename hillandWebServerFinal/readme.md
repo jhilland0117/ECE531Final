@@ -30,9 +30,15 @@ Currently only allow port 8080 traffic, port ssh to my IP.
 Public IP for this instance with httpdnano running is
 http://52.8.135.131:8080
 
-## Commands
-needs to be updated
+## Paths
+- /report - gets reported temperatures that have been written to db
+- /state - gets whether heater is on or off
+- /temps - displays what the three temp settings are set to
 
+# Change temp settings
+- POST urlFromAbove:port -d id,temp1,temp2
+- please keep id between 1-3, server not built for more than MORNING, AFTERNOON and EVENING values.
+- temp1 and temp2 are a temperature range, so temp1 < temp2, guess i should have check for that bug in my code. oh well!
 
 ## Running the code
 `mvn compile`
